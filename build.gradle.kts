@@ -15,45 +15,72 @@ java {
 
 repositories {
     mavenCentral()
+
+    // PaperMC
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://jitpack.io")
+
+    // PlaceholderAPI
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-    maven("https://repo.luckperms.net/")
-    maven("https://nexus.hc.to/content/repositories/pub_releases/")
+
+    // CodeMC (Vault & lainnya)
+    maven("https://repo.codemc.io/repository/maven-public/")
+
+    // OpenCollab
+    maven("https://repo.opencollab.dev/main/")
+
+    // JitPack
+    maven("https://jitpack.io")
 }
 
 dependencies {
+    // Paper
     compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
 
+    // Vault
     compileOnly("net.milkbowl.vault:VaultAPI:1.7.1")
-    compileOnly("me.clip:placeholderapi:2.11.6")
-    compileOnly("net.luckperms:api:5.4")
 
+    // PlaceholderAPI
+    compileOnly("me.clip:placeholderapi:2.11.6")
+
+    // LuckPerms API
+    compileOnly("net.luckperms:api:5.5")
+
+    // Database
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("org.xerial:sqlite-jdbc:3.47.1.0")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.1")
     implementation("com.mysql:mysql-connector-j:9.1.0")
 
+    // Adventure
     compileOnly("net.kyori:adventure-api:4.17.0")
     compileOnly("net.kyori:adventure-text-minimessage:4.17.0")
-    compileOnly("net.kyori:adventure-platform-bukkit:4.3.4")
 
+    // Testing
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.mockito:mockito-core:5.14.2")
 }
 
 tasks {
+
     compileJava {
         options.encoding = "UTF-8"
         options.release.set(25)
-        options.compilerArgs.addAll(listOf("-Xlint:all", "-parameters"))
+        options.compilerArgs.addAll(
+            listOf(
+                "-Xlint:all",
+                "-parameters"
+            )
+        )
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        val props = mapOf(
+            "version" to version
+        )
+
         inputs.properties(props)
+
         filesMatching("plugin.yml") {
             expand(props)
         }
@@ -64,20 +91,50 @@ tasks {
     }
 
     shadowJar {
+
         archiveClassifier.set("")
         archiveBaseName.set("EcoCore")
 
-        relocate("com.zaxxer.hikari", "com.azthera.ecocore.libs.hikari")
-        relocate("org.sqlite", "com.azthera.ecocore.libs.sqlite")
-        relocate("org.mariadb.jdbc", "com.azthera.ecocore.libs.mariadb")
-        relocate("com.mysql", "com.azthera.ecocore.libs.mysql")
+        relocate(
+            "com.zaxxer.hikari",
+            "com.azthera.ecocore.libs.hikari"
+        )
+
+        relocate(
+            "org.sqlite",
+            "com.azthera.ecocore.libs.sqlite"
+        )
+
+        relocate(
+            "org.mariadb.jdbc",
+            "com.azthera.ecocore.libs.mariadb"
+        )
+
+        relocate(
+            "com.mysql",
+            "com.azthera.ecocore.libs.mysql"
+        )
 
         minimize {
-            exclude(dependency("com.zaxxer:HikariCP:.*"))
-            exclude(dependency("org.xerial:sqlite-jdbc:.*"))
-            exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
-            exclude(dependency("com.mysql:mysql-connector-j:.*"))
+
+            exclude(
+                dependency("com.zaxxer:HikariCP:.*")
+            )
+
+            exclude(
+                dependency("org.xerial:sqlite-jdbc:.*")
+            )
+
+            exclude(
+                dependency("org.mariadb.jdbc:mariadb-java-client:.*")
+            )
+
+            exclude(
+                dependency("com.mysql:mysql-connector-j:.*")
+            )
+
         }
+
     }
 
     build {
@@ -87,4 +144,5 @@ tasks {
     withType<JavaCompile> {
         options.encoding = "UTF-8"
     }
+
 }
