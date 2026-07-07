@@ -1,0 +1,55 @@
+# Sell module (Sell GUI, sell-hand, sell-inventory, auto-sell).
+#
+# CATATAN PENTING soal harga aman:
+# - SellService HANYA menjual item yang SUDAH terdaftar di Dynamic Shop
+#   (shopManager.getDefinition(itemId)) — kalau item tidak ada di shop
+#   catalog, item itu otomatis TIDAK BISA dijual sama sekali, berapapun
+#   whitelist/blacklist di bawah ini diatur. Starter shop catalog bawaan
+#   EcoCore CUMA berisi ores/farming/wood/fishing (lihat modules/shop.yml),
+#   jadi elytra, netherite gear, totem, dll TIDAK sellable secara default.
+# - blacklist di bawah ini adalah lapisan pengaman KEDUA (defense-in-depth):
+#   walaupun suatu saat admin iseng mendaftarkan item ini ke shop catalog,
+#   item-item di blacklist tetap tidak akan bisa dijual lewat Sell module.
+# - Multiplier (global & per-material) HANYA mengalikan hasil harga yang
+#   SUDAH di-clamp oleh ElasticPricingEngine — bukan menambah harga baru,
+#   jadi tidak mungkin menghasilkan angka infinity/NaN selama basePrice,
+#   minPrice, dan maxPrice item tersebut adalah angka wajar dan finite.
+
+whitelist: []   # kalau diisi, HANYA material di list ini yang bisa dijual (blacklist diabaikan).
+
+blacklist:
+  - ELYTRA
+  - NETHERITE_SWORD
+  - NETHERITE_PICKAXE
+  - NETHERITE_AXE
+  - NETHERITE_SHOVEL
+  - NETHERITE_HOE
+  - NETHERITE_HELMET
+  - NETHERITE_CHESTPLATE
+  - NETHERITE_LEGGINGS
+  - NETHERITE_BOOTS
+  - NETHERITE_INGOT
+  - NETHERITE_BLOCK
+  - TOTEM_OF_UNDYING
+  - ENCHANTED_GOLDEN_APPLE
+  - NETHER_STAR
+  - DRAGON_EGG
+  - DRAGON_HEAD
+  - BEACON
+  - ENCHANTED_BOOK
+  - SHULKER_BOX
+  - WRITTEN_BOOK
+  - PLAYER_HEAD
+  - COMMAND_BLOCK
+  - BARRIER
+  - STRUCTURE_BLOCK
+  - STRUCTURE_VOID
+  - JIGSAW
+  - DEBUG_STICK
+  - SPAWNER
+
+multiplier:
+  global: 1.0
+  per-material:
+    DIAMOND: 1.05
+    EMERALD: 1.05

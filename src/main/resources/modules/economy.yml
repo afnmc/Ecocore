@@ -1,0 +1,23 @@
+# Economy module — core balance/tax/sink settings.
+starting-balance: 500.0
+
+tax:
+  enabled: true
+  rate: 0.02          # 2% tax on shop sell transactions, feeds into money-sink accounting.
+
+money-sink:
+  threshold: 1000000.0  # informational threshold used by economy statistics tracking.
+
+statistics:
+  enabled: true
+
+# Multi-currency is opt-in. When disabled, "vault" is the only currency and
+# all balances go through the Vault-compatible EconomyService.
+multi-currency:
+  enabled: false
+  primary: "vault"
+  currencies:
+    vault:
+      display-name: "Coins"
+      symbol: "$"
+      starting-balance: 500.0

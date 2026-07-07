@@ -1,0 +1,17 @@
+title: "<dark_gray>Dynamic Shop"
+rows: 6
+
+slots:
+  previous-page-slot: 45
+  next-page-slot: 53
+  search-slot: 49
+  sort-slot: 50
+  close-slot: 48
+
+icons:
+  border-filler: GRAY_STAINED_GLASS_PANE
+  search: COMPASS
+  sort: HOPPER
+  close: BARRIER
+  previous-page: ARROW
+  next-page: ARROW

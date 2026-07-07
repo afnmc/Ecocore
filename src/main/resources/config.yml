@@ -1,0 +1,42 @@
+debug: false
+prefix: "<gray>[<gold>EcoCore</gold>]</gray> "
+
+database:
+  type: SQLITE   # SQLITE, MYSQL, MARIADB
+
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 30000
+
+  sqlite:
+    file: "ecocore.db"
+
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "ecocore"
+    username: "root"
+    password: ""
+    use-ssl: false
+
+  mariadb:
+    host: "localhost"
+    port: 3306
+    database: "ecocore"
+    username: "root"
+    password: ""
+    use-ssl: false
+
+# Each key here matches a module id (see ModuleManager). Set to false to
+# disable a module entirely without deleting its files. Modules communicate
+# only through events/services, so disabling one never breaks another.
+modules:
+  economy: true
+  shop: true
+  market: true
+  inflation: true
+  sell: true
+  jobs: true
+  quest: true
+  minions: true

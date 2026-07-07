@@ -1,0 +1,218 @@
+# Katalog Dynamic Shop — sepenuhnya config-driven.
+#
+# Admin cukup edit file ini untuk menambah/mengubah/menghapus item dan
+# kategori shop, TANPA perlu rebuild plugin. Setelah edit, jalankan
+# /eco reload untuk menerapkan perubahan (item yang sudah ada harga
+# dinamisnya di database TIDAK di-reset oleh reload — hanya item baru
+# yang akan dibuatkan record harga awal).
+#
+# ATURAN AMAN HARGA (WAJIB dibaca sebelum menambah item baru):
+# - min-price dan max-price WAJIB diisi masuk akal untuk SETIAP item.
+#   ElasticPricingEngine akan selalu meng-clamp harga akhir ke rentang ini,
+#   jadi harga tidak akan pernah melebihi max-price walau demand meledak.
+# - JANGAN mendaftarkan item langka/OP (elytra, netherite gear, totem of
+#   undying, enchanted golden apple, nether star, shulker box, dll) kecuali
+#   kamu benar-benar sudah mengatur min-price/max-price yang wajar untuk
+#   ekonomi server-mu. Item-item tersebut juga tetap diblokir di level Sell
+#   module lewat blacklist di modules/sell.yml sebagai lapisan pengaman
+#   kedua, terlepas dari apakah item itu didaftarkan di sini atau tidak.
+# - elasticity yang lebih tinggi (mendekati 1.0) membuat harga bereaksi
+#   lebih cepat terhadap demand/supply; nilai wajar ada di 0.10–0.25.
+# - restock-seconds dan stock mengatur seberapa cepat & seberapa banyak
+#   stok NPC kembali terisi; stock besar + restock cepat = harga lebih stabil.
+# - sellable: false membuat item HANYA bisa dibeli (tidak bisa dijual balik
+#   ke shop), berguna untuk item yang tidak ingin kamu buka jalur farming-nya.
+# - buyable: false membuat item HANYA bisa dijual (tidak dijual NPC ke
+#   pemain), berguna untuk drop hasil farming/mining yang memang cuma untuk
+#   dijual, bukan dibeli ulang.
+
+categories:
+  ores:
+    display-name: "Ores & Minerals"
+    icon: IRON_INGOT
+    sort-order: 1
+
+  farming:
+    display-name: "Farming"
+    icon: WHEAT
+    sort-order: 2
+
+  wood:
+    display-name: "Wood"
+    icon: OAK_LOG
+    sort-order: 3
+
+  fishing:
+    display-name: "Fishing"
+    icon: FISHING_ROD
+    sort-order: 4
+
+items:
+  coal:
+    category: ores
+    material: COAL
+    display-name: "Coal"
+    base-price: 4.0
+    min-price: 1.0
+    max-price: 20.0
+    elasticity: 0.15
+    restock-seconds: 1800
+    stock: 640
+    buyable: true
+    sellable: true
+
+  iron_ingot:
+    category: ores
+    material: IRON_INGOT
+    display-name: "Iron Ingot"
+    base-price: 10.0
+    min-price: 3.0
+    max-price: 50.0
+    elasticity: 0.15
+    restock-seconds: 1800
+    stock: 320
+    buyable: true
+    sellable: true
+
+  gold_ingot:
+    category: ores
+    material: GOLD_INGOT
+    display-name: "Gold Ingot"
+    base-price: 18.0
+    min-price: 5.0
+    max-price: 80.0
+    elasticity: 0.18
+    restock-seconds: 1800
+    stock: 256
+    buyable: true
+    sellable: true
+
+  diamond:
+    category: ores
+    material: DIAMOND
+    display-name: "Diamond"
+    base-price: 60.0
+    min-price: 20.0
+    max-price: 250.0
+    elasticity: 0.20
+    restock-seconds: 3600
+    stock: 64
+    buyable: true
+    sellable: true
+
+  emerald:
+    category: ores
+    material: EMERALD
+    display-name: "Emerald"
+    base-price: 45.0
+    min-price: 15.0
+    max-price: 200.0
+    elasticity: 0.20
+    restock-seconds: 3600
+    stock: 64
+    buyable: true
+    sellable: true
+
+  wheat:
+    category: farming
+    material: WHEAT
+    display-name: "Wheat"
+    base-price: 2.0
+    min-price: 0.5
+    max-price: 10.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
+
+  carrot:
+    category: farming
+    material: CARROT
+    display-name: "Carrot"
+    base-price: 2.0
+    min-price: 0.5
+    max-price: 10.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
+
+  potato:
+    category: farming
+    material: POTATO
+    display-name: "Potato"
+    base-price: 2.0
+    min-price: 0.5
+    max-price: 10.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
+
+  pumpkin:
+    category: farming
+    material: PUMPKIN
+    display-name: "Pumpkin"
+    base-price: 5.0
+    min-price: 1.0
+    max-price: 25.0
+    elasticity: 0.14
+    restock-seconds: 1200
+    stock: 256
+    buyable: true
+    sellable: true
+
+  oak_log:
+    category: wood
+    material: OAK_LOG
+    display-name: "Oak Log"
+    base-price: 3.0
+    min-price: 1.0
+    max-price: 15.0
+    elasticity: 0.12
+    restock-seconds: 1200
+    stock: 640
+    buyable: true
+    sellable: true
+
+  spruce_log:
+    category: wood
+    material: SPRUCE_LOG
+    display-name: "Spruce Log"
+    base-price: 3.0
+    min-price: 1.0
+    max-price: 15.0
+    elasticity: 0.12
+    restock-seconds: 1200
+    stock: 640
+    buyable: true
+    sellable: true
+
+  cod:
+    category: fishing
+    material: COD
+    display-name: "Cod"
+    base-price: 4.0
+    min-price: 1.0
+    max-price: 20.0
+    elasticity: 0.15
+    restock-seconds: 1200
+    stock: 320
+    buyable: true
+    sellable: true
+
+  salmon:
+    category: fishing
+    material: SALMON
+    display-name: "Salmon"
+    base-price: 5.0
+    min-price: 1.5
+    max-price: 25.0
+    elasticity: 0.15
+    restock-seconds: 1200
+    stock: 320
+    buyable: true
+    sellable: true

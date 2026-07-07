@@ -1,0 +1,12 @@
+title: "<dark_gray>Jobs"
+rows: 5
+
+icons:
+  border-filler: GRAY_STAINED_GLASS_PANE
+  mining: IRON_PICKAXE
+  farming: WHEAT
+  fishing: FISHING_ROD
+  hunting: BOW
+  woodcutting: IRON_AXE
+  builder: BRICKS
+  explorer: MAP

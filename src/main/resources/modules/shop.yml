@@ -1,0 +1,27 @@
+# Dynamic Shop module.
+#
+# IMPORTANT (harga aman/anti-exploit):
+# - Setiap item WAJIB punya minPrice/maxPrice sendiri saat didaftarkan
+#   (lihat EcoCorePlugin#registerDefaultShopCatalog atau /eco shop admin editor).
+#   ElasticPricingEngine SELALU meng-clamp harga akhir ke [minPrice, maxPrice],
+#   jadi harga tidak akan pernah meledak ke infinity walau demand terus naik.
+# - default-min-factor / default-max-factor di bawah ini HANYA dipakai sebagai
+#   fallback kalau item baru didaftarkan tanpa override — bukan pengganti
+#   minPrice/maxPrice per-item.
+# - Item langka/OP (elytra, netherite gear, totem, enchanted golden apple, dll)
+#   secara default TIDAK terdaftar di starter catalog dan karenanya tidak bisa
+#   dibeli/dijual sama sekali sampai admin sengaja mendaftarkannya lewat
+#   /eco shop admin editor dengan minPrice/maxPrice yang wajar.
+pricing:
+  default-elasticity: 0.15
+  default-min-factor: 0.4    # harga terendah = 40% dari basePrice
+  default-max-factor: 2.5    # harga tertinggi = 250% dari basePrice
+  realtime: true
+
+stock:
+  default-restock-seconds: 1800
+  default-stock: 64
+
+gui:
+  rows: 6
+  items-per-page: 45

@@ -1,0 +1,15 @@
+title: "<dark_gray>Minions"
+rows: 4
+
+icons:
+  border-filler: GRAY_STAINED_GLASS_PANE
+  miner: IRON_PICKAXE
+  farmer: WHEAT
+  lumberjack: IRON_AXE
+  fishing: FISHING_ROD
+  collector: HOPPER
+  upgrade-speed: SUGAR
+  upgrade-capacity: CHEST
+  upgrade-fortune: EMERALD
+  fuel-slot: COAL
+  storage-slot: BARREL

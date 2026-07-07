@@ -1,0 +1,13 @@
+# Quest module.
+rotation:
+  daily-count: 3
+  weekly-count: 3
+  monthly-count: 1
+  daily-reset-hour: 0
+
+chain:
+  enabled: true
+
+random:
+  enabled: true
+  weight: 0.3

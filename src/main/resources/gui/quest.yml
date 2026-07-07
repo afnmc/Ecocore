@@ -1,0 +1,12 @@
+title: "<dark_gray>Quests"
+rows: 5
+
+icons:
+  border-filler: GRAY_STAINED_GLASS_PANE
+  quest-daily: CLOCK
+  quest-weekly: BOOK
+  quest-monthly: ENCHANTED_BOOK
+  quest-chain: CHAIN
+  quest-random: FIREWORK_STAR
+  quest-completed: LIME_DYE
+  quest-locked: GRAY_DYE

@@ -1,0 +1,97 @@
+name: EcoCore
+version: '${version}'
+main: com.azthera.ecocore.EcoCorePlugin
+api-version: '1.21'
+author: Azthera
+description: Modular survival economy engine for the Azthera network.
+website: https://azthera.net
+
+folia-supported: true
+
+load: POSTWORLD
+
+depend:
+  - Vault
+
+softdepend:
+  - PlaceholderAPI
+  - LuckPerms
+
+commands:
+  eco:
+    description: Root command for EcoCore.
+    usage: /<command> [reload|debug|give|market|inflation|jobs|quest|economy|shop]
+    permission: ecocore.command.eco
+
+permissions:
+  ecocore.*:
+    description: Grants all EcoCore permissions.
+    default: op
+    children:
+      ecocore.command.eco: true
+      ecocore.admin: true
+      ecocore.use: true
+
+  ecocore.use:
+    description: Base permission to use EcoCore features.
+    default: true
+
+  ecocore.admin:
+    description: Grants access to all administrative subcommands.
+    default: op
+
+  ecocore.command.eco:
+    description: Allows use of the /eco command.
+    default: true
+
+  ecocore.command.eco.reload:
+    description: Allows reloading EcoCore configuration.
+    default: op
+
+  ecocore.command.eco.debug:
+    description: Allows toggling debug mode.
+    default: op
+
+  ecocore.command.eco.give:
+    description: Allows giving currency to players.
+    default: op
+
+  ecocore.command.eco.market:
+    description: Allows managing the market simulation.
+    default: op
+
+  ecocore.command.eco.inflation:
+    description: Allows viewing and adjusting inflation parameters.
+    default: op
+
+  ecocore.command.eco.jobs:
+    description: Allows managing player job data.
+    default: op
+
+  ecocore.command.eco.quest:
+    description: Allows managing player quest data.
+    default: op
+
+  ecocore.command.eco.economy:
+    description: Allows viewing economy-wide statistics.
+    default: op
+
+  ecocore.command.eco.shop:
+    description: Allows managing dynamic shop items.
+    default: op
+
+  ecocore.shop.open:
+    description: Allows opening the shop GUI.
+    default: true
+
+  ecocore.sell.use:
+    description: Allows using sell features.
+    default: true
+
+  ecocore.jobs.use:
+    description: Allows joining and progressing jobs.
+    default: true
+
+  ecocore.quest.use:
+    description: Allows accepting and completing quests.
+    default: true

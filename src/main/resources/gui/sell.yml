@@ -1,0 +1,13 @@
+title: "<dark_gray>Sell"
+rows: 6
+
+slots:
+  sell-hand-slot: 48
+  sell-all-slot: 50
+  confirm-slot: 53
+
+icons:
+  border-filler: GRAY_STAINED_GLASS_PANE
+  sell-hand: HOPPER
+  sell-all: CHEST
+  confirm: LIME_STAINED_GLASS_PANE

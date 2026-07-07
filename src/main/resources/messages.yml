@@ -1,0 +1,60 @@
+general:
+  no-permission: "<red>Kamu tidak punya izin untuk melakukan ini."
+  unknown-subcommand: "<red>Subcommand tidak dikenal. Gunakan /eco untuk melihat bantuan."
+  reload-success: "<green>Konfigurasi EcoCore berhasil dimuat ulang."
+  player-only: "<red>Perintah ini hanya bisa dijalankan oleh pemain."
+  player-not-found: "<red>Pemain <white><player></white> tidak ditemukan."
+  invalid-number: "<red>Jumlah tidak valid."
+
+economy:
+  balance: "<gray>Saldo kamu: <gold><amount></gold>"
+  balance-other: "<gray>Saldo <white><player></white>: <gold><amount></gold>"
+  give-success: "<green>Berhasil memberikan <gold><amount></gold> kepada <white><player></white>."
+  insufficient-funds: "<red>Saldo kamu tidak cukup untuk transaksi ini."
+  deposit-received: "<green>Kamu menerima <gold><amount></gold> <gray>(<reason>)</gray>"
+  withdraw-applied: "<yellow>Saldo kamu berkurang <gold><amount></gold> <gray>(<reason>)</gray>"
+
+shop:
+  buy-success: "<green>Berhasil membeli <white><amount>x <item></white> seharga <gold><price></gold>."
+  sell-success: "<green>Berhasil menjual <white><amount>x <item></white> seharga <gold><price></gold>."
+  out-of-stock: "<red>Stok <white><item></white> sedang habis."
+  item-not-found: "<red>Item ini tidak terdaftar di shop."
+  not-buyable: "<red>Item ini tidak bisa dibeli."
+  not-sellable: "<red>Item ini tidak bisa dijual di shop."
+
+sell:
+  sell-hand-success: "<green>Kamu menjual item di tangan seharga <gold><price></gold>."
+  sell-inventory-success: "<green>Kamu menjual seluruh inventory seharga total <gold><price></gold>."
+  sell-nothing: "<red>Tidak ada item yang bisa dijual."
+  item-blocked: "<red>Item ini tidak diperbolehkan untuk dijual."
+  auto-sell-enabled: "<green>Auto-sell diaktifkan."
+  auto-sell-disabled: "<yellow>Auto-sell dinonaktifkan."
+
+market:
+  event-started: "<gold>[Market] <yellow>Event <white><event></white> telah dimulai!"
+  event-ended: "<gold>[Market] <gray>Event <white><event></white> telah berakhir."
+  tick-forced: "<green>Market simulation tick dijalankan manual."
+
+inflation:
+  status: "<gray>Inflation rate saat ini: <yellow><rate>%</yellow>"
+
+jobs:
+  join-success: "<green>Kamu bergabung dengan job <white><job></white>."
+  level-up: "<gold>[Jobs] <yellow>Job <white><job></white> naik ke level <white><level></white>!"
+  prestige-success: "<gold>[Jobs] <yellow>Job <white><job></white> prestige ke tingkat <white><prestige></white>!"
+  xp-gain: "<gray>+<amount> XP <white><job></white>"
+  not-joined: "<red>Kamu belum bergabung dengan job ini."
+
+quest:
+  accepted: "<green>Quest <white><quest></white> diterima."
+  completed: "<gold>[Quest] <yellow>Quest <white><quest></white> selesai! Reward: <gold><reward></gold>"
+  progress: "<gray>Progress quest <white><quest></white>: <white><progress>/<target></white>"
+  already-active: "<red>Kamu sudah memiliki quest ini."
+  chain-unlocked: "<gold>[Quest] <yellow>Quest chain <white><quest></white> terbuka!"
+
+minions:
+  spawn-success: "<green>Minion <white><type></white> berhasil ditempatkan."
+  limit-reached: "<red>Kamu sudah mencapai batas maksimum minion."
+  upgrade-success: "<green>Minion <white><type></white> berhasil di-upgrade ke level <white><level></white>."
+  fuel-empty: "<yellow>Minion kehabisan bahan bakar."
+  storage-full: "<yellow>Storage minion penuh, item drop ke tanah."

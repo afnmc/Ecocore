@@ -1,0 +1,54 @@
+# Jobs module.
+xp-curve:
+  base: 100.0
+  multiplier: 1.12
+
+max-level: 100
+
+combo:
+  window-millis: 4000
+  max-multiplier: 2.0
+
+bonus:
+  daily-multiplier: 1.25
+  weekly-multiplier: 1.5
+
+prestige:
+  max: 5
+  reward-multiplier-step: 0.1
+
+jobs:
+  mining:
+    enabled: true
+    base-xp-per-action: 5.0
+    base-reward-per-action: 2.0
+
+  farming:
+    enabled: true
+    base-xp-per-action: 4.0
+    base-reward-per-action: 1.5
+
+  fishing:
+    enabled: true
+    base-xp-per-action: 6.0
+    base-reward-per-action: 2.5
+
+  hunting:
+    enabled: true
+    base-xp-per-action: 7.0
+    base-reward-per-action: 3.0
+
+  woodcutting:
+    enabled: true
+    base-xp-per-action: 4.0
+    base-reward-per-action: 1.5
+
+  builder:
+    enabled: true
+    base-xp-per-action: 3.0
+    base-reward-per-action: 1.0
+
+  explorer:
+    enabled: true
+    base-xp-per-action: 5.0
+    base-reward-per-action: 1.5

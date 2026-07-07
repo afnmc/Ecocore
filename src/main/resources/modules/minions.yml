@@ -1,0 +1,47 @@
+# Minions module. Set enabled: false if using a third-party Minion plugin
+# instead — EcoCore then only exposes its API/hooks (see EcoCoreAPI) and
+# does not spawn or manage its own minions.
+enabled: true
+
+limits:
+  max-per-player: 5
+
+defaults:
+  storage-slots: 9
+  fuel-capacity: 64
+
+types:
+  miner:
+    enabled: true
+    base-action-interval-seconds: 5.0
+    max-upgrade-speed-level: 5
+    max-upgrade-capacity-level: 5
+    max-upgrade-fortune-level: 5
+
+  farmer:
+    enabled: true
+    base-action-interval-seconds: 5.0
+    max-upgrade-speed-level: 5
+    max-upgrade-capacity-level: 5
+    max-upgrade-fortune-level: 5
+
+  lumberjack:
+    enabled: true
+    base-action-interval-seconds: 6.0
+    max-upgrade-speed-level: 5
+    max-upgrade-capacity-level: 5
+    max-upgrade-fortune-level: 5
+
+  fishing:
+    enabled: true
+    base-action-interval-seconds: 8.0
+    max-upgrade-speed-level: 5
+    max-upgrade-capacity-level: 5
+    max-upgrade-fortune-level: 5
+
+  collector:
+    enabled: true
+    base-action-interval-seconds: 10.0
+    max-upgrade-speed-level: 5
+    max-upgrade-capacity-level: 5
+    max-upgrade-fortune-level: 0

@@ -1,0 +1,19 @@
+# Inflation module — tracks money supply/velocity and gently nudges NPC
+# prices, upgrade costs, and tax rather than causing sharp jumps.
+calculation-interval-seconds: 600
+
+thresholds:
+  high: 0.08     # inflation rate above this triggers upward price adjustment
+  low: -0.05     # inflation rate below this (deflation) triggers downward adjustment
+
+adjustment:
+  npc-price-step: 0.01       # max 1% NPC price nudge per adjustment cycle
+  upgrade-cost-step: 0.01    # max 1% upgrade cost nudge per adjustment cycle
+  tax-step: 0.001            # max 0.1% tax rate nudge per adjustment cycle
+
+# Hard bounds so NPC prices can never drift into absurd territory even after
+# many adjustment cycles in a row — always relative to each item's own
+# minPrice/maxPrice, never unbounded.
+bounds:
+  max-npc-price-multiplier: 1.75
+  min-npc-price-multiplier: 0.6
