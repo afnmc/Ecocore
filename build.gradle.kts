@@ -75,11 +75,6 @@ tasks {
         )
 
         relocate(
-            "org.sqlite",
-            "com.azthera.ecocore.libs.sqlite"
-        )
-
-        relocate(
             "org.mariadb.jdbc",
             "com.azthera.ecocore.libs.mariadb"
         )
