@@ -89,7 +89,11 @@ tasks {
             "com.azthera.ecocore.libs.mysql"
         )
 
-        minimize()
+        minimize {
+            exclude(dependency("org.xerial:sqlite-jdbc:.*"))
+            exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
+            exclude(dependency("com.mysql:mysql-connector-j:.*"))
+        }
     }
 
     build {
