@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.gradleup.shadow") version "8.3.5"
+    id("com.gradleup.shadow") version "9.4.3"
 }
 
 group = "com.azthera"
@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
 
-    compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+-alpha")
 
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
         exclude(group = "org.bukkit")
