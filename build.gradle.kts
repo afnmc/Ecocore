@@ -38,7 +38,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
 
     // Vault API
-    compileOnly("net.milkbowl.vault:VaultAPI:1.7.1")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
 
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.11.6")
