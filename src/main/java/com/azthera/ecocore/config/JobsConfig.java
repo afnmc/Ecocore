@@ -1,11 +1,11 @@
 package com.azthera.ecocore.config;
- 
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
- 
+
 import java.util.HashMap;
 import java.util.Map;
- 
+
 /**
  * Typed view over modules/jobs.yml: the shared XP curve, combo window,
  * daily/weekly bonus multipliers, prestige bounds, and per-job base values
@@ -13,7 +13,7 @@ import java.util.Map;
  * Exploring, Builder).
  */
 public final class JobsConfig {
- 
+
     private double xpCurveBase;
     private double xpCurveMultiplier;
     private int maxLevel;
@@ -21,14 +21,15 @@ public final class JobsConfig {
     private double comboMaxMultiplier;
     private double dailyBonusMultiplier;
     private double weeklyBonusMultiplier;
+    private long dailyResetHourOfDay;
     private int maxPrestige;
     private double prestigeRewardMultiplierStep;
     private final Map<String, JobDefinition> jobDefinitions = new HashMap<>();
- 
+
     public JobsConfig(YamlConfiguration source) {
         load(source);
     }
- 
+
     public void load(YamlConfiguration source) {
         this.xpCurveBase = source.getDouble("xp-curve.base", 100.0);
         this.xpCurveMultiplier = source.getDouble("xp-curve.multiplier", 1.12);
@@ -37,9 +38,10 @@ public final class JobsConfig {
         this.comboMaxMultiplier = source.getDouble("combo.max-multiplier", 2.0);
         this.dailyBonusMultiplier = source.getDouble("bonus.daily-multiplier", 1.25);
         this.weeklyBonusMultiplier = source.getDouble("bonus.weekly-multiplier", 1.5);
+        this.dailyResetHourOfDay = source.getLong("bonus.daily-reset-hour", 0L);
         this.maxPrestige = source.getInt("prestige.max", 5);
         this.prestigeRewardMultiplierStep = source.getDouble("prestige.reward-multiplier-step", 0.1);
- 
+
         jobDefinitions.clear();
         ConfigurationSection jobsSection = source.getConfigurationSection("jobs");
         if (jobsSection != null) {
@@ -57,47 +59,51 @@ public final class JobsConfig {
             }
         }
     }
- 
+
     public double getXpCurveBase() {
         return xpCurveBase;
     }
- 
+
     public double getXpCurveMultiplier() {
         return xpCurveMultiplier;
     }
- 
+
     public int getMaxLevel() {
         return maxLevel;
     }
- 
+
     public long getComboWindowMillis() {
         return comboWindowMillis;
     }
- 
+
     public double getComboMaxMultiplier() {
         return comboMaxMultiplier;
     }
- 
+
     public double getDailyBonusMultiplier() {
         return dailyBonusMultiplier;
     }
- 
+
     public double getWeeklyBonusMultiplier() {
         return weeklyBonusMultiplier;
     }
- 
+
+    public long getDailyResetHourOfDay() {
+        return dailyResetHourOfDay;
+    }
+
     public int getMaxPrestige() {
         return maxPrestige;
     }
- 
+
     public double getPrestigeRewardMultiplierStep() {
         return prestigeRewardMultiplierStep;
     }
- 
+
     public Map<String, JobDefinition> getJobDefinitions() {
         return Map.copyOf(jobDefinitions);
     }
- 
+
     public record JobDefinition(String id, boolean enabled, double baseXpPerAction, double baseRewardPerAction) {
     }
 }
