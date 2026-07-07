@@ -16,14 +16,14 @@ java {
 repositories {
     mavenCentral()
 
-    // PaperMC
+    // Paper
     maven("https://repo.papermc.io/repository/maven-public/")
 
     // PlaceholderAPI
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 
-    // CodeMC (Vault & lainnya)
-    maven("https://repo.codemc.io/repository/maven-public/")
+    // CodeMC
+    maven("https://repo.codemc.org/repository/maven-public/")
 
     // OpenCollab
     maven("https://repo.opencollab.dev/main/")
@@ -33,16 +33,17 @@ repositories {
 }
 
 dependencies {
-    // Paper
+
+    // Paper API
     compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
 
-    // Vault
+    // Vault API
     compileOnly("net.milkbowl.vault:VaultAPI:1.7.1")
 
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    // LuckPerms API
+    // LuckPerms
     compileOnly("net.luckperms:api:5.5")
 
     // Database
@@ -75,6 +76,7 @@ tasks {
     }
 
     processResources {
+
         val props = mapOf(
             "version" to version
         )
@@ -117,21 +119,10 @@ tasks {
 
         minimize {
 
-            exclude(
-                dependency("com.zaxxer:HikariCP:.*")
-            )
-
-            exclude(
-                dependency("org.xerial:sqlite-jdbc:.*")
-            )
-
-            exclude(
-                dependency("org.mariadb.jdbc:mariadb-java-client:.*")
-            )
-
-            exclude(
-                dependency("com.mysql:mysql-connector-j:.*")
-            )
+            exclude(dependency("com.zaxxer:HikariCP:.*"))
+            exclude(dependency("org.xerial:sqlite-jdbc:.*"))
+            exclude(dependency("org.mariadb.jdbc:mariadb-java-client:.*"))
+            exclude(dependency("com.mysql:mysql-connector-j:.*"))
 
         }
 
@@ -144,5 +135,4 @@ tasks {
     withType<JavaCompile> {
         options.encoding = "UTF-8"
     }
-
 }
