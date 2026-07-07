@@ -19,6 +19,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.codemc.org/repository/maven-releases/")
+    maven("https://jitpack.io")
 }
 
 dependencies {
