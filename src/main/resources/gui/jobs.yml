@@ -10,3 +10,6 @@ icons:
   woodcutting: IRON_AXE
   builder: BRICKS
   explorer: MAP
+
+names:
+  border-filler: " "
