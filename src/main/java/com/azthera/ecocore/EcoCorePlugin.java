@@ -465,6 +465,10 @@ public final class EcoCorePlugin extends JavaPlugin {
             minionManager, minionUpgradeService, configManager.getGuiConfig(), guiIconResolver,
             guiSessionManager, numberFormatter, messageService
         ));
+        ecoCommand.register(new ShopOpenSubCommand(
+            shopManager, shopTransactionService, configManager.getGuiConfig(), guiIconResolver,
+            messageService, guiSessionManager, numberFormatter
+        ));
 
         var command = getCommand("ecocore");
         if (command != null) {
