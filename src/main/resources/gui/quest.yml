@@ -10,3 +10,6 @@ icons:
   quest-random: FIREWORK_STAR
   quest-completed: LIME_DYE
   quest-locked: GRAY_DYE
+
+names:
+  border-filler: " "
