@@ -15,3 +15,10 @@ icons:
   close: BARRIER
   previous-page: ARROW
   next-page: ARROW
+
+names:
+  border-filler: " "
+  search: "<aqua>Cari Item"
+  close: "<red>Tutup"
+  previous-page: "<gray>Halaman Sebelumnya"
+  next-page: "<gray>Halaman Berikutnya"
