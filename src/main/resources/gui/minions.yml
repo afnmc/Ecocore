@@ -13,3 +13,6 @@ icons:
   upgrade-fortune: EMERALD
   fuel-slot: COAL
   storage-slot: BARREL
+
+names:
+  border-filler: " "
