@@ -3,14 +3,16 @@ package com.azthera.ecocore.config;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Typed view over modules/jobs.yml: the shared XP curve, combo window,
- * daily/weekly bonus multipliers, prestige bounds, and per-job base values
- * for the seven job types (Mining, Woodcutting, Fishing, Farming, Hunting,
- * Exploring, Builder).
+ * daily/weekly bonus multipliers, prestige bounds, per-job base values, and
+ * the configurable per-level-up reward table (flat money-per-level plus
+ * one-time milestone rewards at specific levels).
  */
 public final class JobsConfig {
 
@@ -24,7 +26,9 @@ public final class JobsConfig {
     private long dailyResetHourOfDay;
     private int maxPrestige;
     private double prestigeRewardMultiplierStep;
+    private double moneyPerLevel;
     private final Map<String, JobDefinition> jobDefinitions = new HashMap<>();
+    private final Map<Integer, LevelMilestone> levelMilestones = new HashMap<>();
 
     public JobsConfig(YamlConfiguration source) {
         load(source);
@@ -57,6 +61,54 @@ public final class JobsConfig {
                     jobSection.getDouble("base-reward-per-action", 2.0)
                 ));
             }
+        }
+
+        loadLevelRewards(source);
+    }
+
+    private void loadLevelRewards(YamlConfiguration source) {
+        levelMilestones.clear();
+        this.moneyPerLevel = 0.0;
+
+        ConfigurationSection levelRewardsSection = source.getConfigurationSection("level-rewards");
+        if (levelRewardsSection == null) {
+            return;
+        }
+
+        this.moneyPerLevel = levelRewardsSection.getDouble("money-per-level", 0.0);
+
+        ConfigurationSection milestonesSection = levelRewardsSection.getConfigurationSection("milestones");
+        if (milestonesSection == null) {
+            return;
+        }
+
+        for (String levelKey : milestonesSection.getKeys(false)) {
+            ConfigurationSection milestoneSection = milestonesSection.getConfigurationSection(levelKey);
+            if (milestoneSection == null) {
+                continue;
+            }
+
+            int level;
+            try {
+                level = Integer.parseInt(levelKey.trim());
+            } catch (NumberFormatException exception) {
+                continue;
+            }
+
+            double milestoneMoney = milestoneSection.getDouble("money", 0.0);
+            List<ItemRewardDefinition> items = new ArrayList<>();
+
+            for (Map<?, ?> itemMap : milestoneSection.getMapList("items")) {
+                Object materialObj = itemMap.get("material");
+                if (materialObj == null) {
+                    continue;
+                }
+                Object amountObj = itemMap.get("amount");
+                int amount = (amountObj instanceof Number number) ? number.intValue() : 1;
+                items.add(new ItemRewardDefinition(materialObj.toString(), Math.max(1, amount)));
+            }
+
+            levelMilestones.put(level, new LevelMilestone(milestoneMoney, List.copyOf(items)));
         }
     }
 
@@ -100,10 +152,24 @@ public final class JobsConfig {
         return prestigeRewardMultiplierStep;
     }
 
+    public double getMoneyPerLevel() {
+        return moneyPerLevel;
+    }
+
     public Map<String, JobDefinition> getJobDefinitions() {
         return Map.copyOf(jobDefinitions);
     }
 
+    public Map<Integer, LevelMilestone> getLevelMilestones() {
+        return Map.copyOf(levelMilestones);
+    }
+
     public record JobDefinition(String id, boolean enabled, double baseXpPerAction, double baseRewardPerAction) {
     }
-}
+
+    public record ItemRewardDefinition(String material, int amount) {
+    }
+
+    public record LevelMilestone(double money, List<ItemRewardDefinition> items) {
+    }
+                }
