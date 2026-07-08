@@ -11,3 +11,9 @@ icons:
   sell-hand: HOPPER
   sell-all: CHEST
   confirm: LIME_STAINED_GLASS_PANE
+
+names:
+  border-filler: " "
+  sell-hand: "<yellow>Jual Item di Tangan"
+  sell-all: "<yellow>Jual Semua Inventory"
+  confirm: "<green>Tutup"
