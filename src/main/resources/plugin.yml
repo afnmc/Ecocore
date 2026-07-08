@@ -18,9 +18,10 @@ softdepend:
   - LuckPerms
 
 commands:
-  eco:
+  ecocore:
     description: Root command for EcoCore.
-    usage: /<command> [reload|debug|give|market|inflation|jobs|quest|economy|shop]
+    usage: /<command> [reload|debug|give|market|inflation|jobs|jobsadmin|quest|questadmin|economy|shop|sell|minions]
+    aliases: [eco, ecoadmin]
     permission: ecocore.command.eco
 
 permissions:
@@ -41,7 +42,7 @@ permissions:
     default: op
 
   ecocore.command.eco:
-    description: Allows use of the /eco command.
+    description: Allows use of the /ecocore command.
     default: true
 
   ecocore.command.eco.reload:
@@ -65,11 +66,11 @@ permissions:
     default: op
 
   ecocore.command.eco.jobs:
-    description: Allows managing player job data.
+    description: Allows looking up player job data (admin).
     default: op
 
   ecocore.command.eco.quest:
-    description: Allows managing player quest data.
+    description: Allows looking up player quest data (admin).
     default: op
 
   ecocore.command.eco.economy:
@@ -89,9 +90,13 @@ permissions:
     default: true
 
   ecocore.jobs.use:
-    description: Allows joining and progressing jobs.
+    description: Allows opening the Jobs GUI, joining, and progressing jobs.
     default: true
 
   ecocore.quest.use:
-    description: Allows accepting and completing quests.
+    description: Allows opening the Quest GUI, accepting, and completing quests.
+    default: true
+
+  ecocore.minions.use:
+    description: Allows opening the Minions GUI and managing owned minions.
     default: true
