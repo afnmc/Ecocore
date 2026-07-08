@@ -1,6 +1,6 @@
 general:
   no-permission: "<red>Kamu tidak punya izin untuk melakukan ini."
-  unknown-subcommand: "<red>Subcommand tidak dikenal. Gunakan /eco untuk melihat bantuan."
+  unknown-subcommand: "<red>Subcommand tidak dikenal. Gunakan /ecocore untuk melihat bantuan."
   reload-success: "<green>Konfigurasi EcoCore berhasil dimuat ulang."
   player-only: "<red>Perintah ini hanya bisa dijalankan oleh pemain."
   player-not-found: "<red>Pemain <white><player></white> tidak ditemukan."
@@ -40,7 +40,9 @@ inflation:
 
 jobs:
   join-success: "<green>Kamu bergabung dengan job <white><job></white>."
+  leave-success: "<yellow>Kamu keluar dari job <white><job></white>."
   level-up: "<gold>[Jobs] <yellow>Job <white><job></white> naik ke level <white><level></white>!"
+  level-up-reward: "<gold>[Jobs] <yellow>Bonus level up: <gold><amount></gold> <gray>(<job>)</gray>"
   prestige-success: "<gold>[Jobs] <yellow>Job <white><job></white> prestige ke tingkat <white><prestige></white>!"
   xp-gain: "<gray>+<amount> XP <white><job></white>"
   not-joined: "<red>Kamu belum bergabung dengan job ini."
