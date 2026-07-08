@@ -12,10 +12,38 @@ combo:
 bonus:
   daily-multiplier: 1.25
   weekly-multiplier: 1.5
+  daily-reset-hour: 0
 
 prestige:
   max: 5
   reward-multiplier-step: 0.1
+
+# Reward yang diberikan setiap kali job naik level. money-per-level diberikan
+# di SETIAP level-up. milestones diberikan SATU KALI saat mencapai level
+# tertentu (tambahan di atas money-per-level), boleh disertai item.
+level-rewards:
+  money-per-level: 10.0
+  milestones:
+    10:
+      money: 150.0
+      items:
+        - material: IRON_INGOT
+          amount: 8
+    25:
+      money: 400.0
+      items:
+        - material: DIAMOND
+          amount: 2
+    50:
+      money: 1000.0
+      items:
+        - material: EMERALD
+          amount: 5
+    100:
+      money: 3000.0
+      items:
+        - material: NETHERITE_INGOT
+          amount: 1
 
 jobs:
   mining:
@@ -48,7 +76,7 @@ jobs:
     base-xp-per-action: 3.0
     base-reward-per-action: 1.0
 
-  explorer:
+  exploring:
     enabled: true
     base-xp-per-action: 5.0
     base-reward-per-action: 1.5
