@@ -321,11 +321,13 @@ public final class EcoCorePlugin extends JavaPlugin {
         this.moneySupplyTracker = new MoneySupplyTracker(economyStatisticsService);
         this.velocityCalculator = new VelocityCalculator();
         this.inflationCalculator = new InflationCalculator(velocityCalculator, configManager.getInflationConfig());
-        // FIX: Added schedulerAdapter as 8th parameter for inflation notifications
+        
+        // FIX: Tambah schedulerAdapter sebagai parameter terakhir
         this.inflationAdjustmentService = new InflationAdjustmentService(
             shopItemRepository, moneySupplyTracker, inflationCalculator, taxManager,
             economyStatisticsService, configManager.getInflationConfig(), logger, schedulerAdapter
         );
+        
         this.inflationModule = new InflationModule(
             inflationAdjustmentService, currencyManager, configManager.getInflationConfig(), schedulerAdapter, logger
         );
