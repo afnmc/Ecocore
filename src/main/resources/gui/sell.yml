@@ -1,19 +1,19 @@
-title: "<dark_gray>Sell"
+title: "<dark_gray>Sell - Keranjang"
 rows: 6
-
 slots:
-  sell-hand-slot: 48
-  sell-all-slot: 50
-  confirm-slot: 53
-
+  sell-all-slot: 38
+  return-all-slot: 40
+  close-slot: 42
+  info-slot: 4
 icons:
   border-filler: GRAY_STAINED_GLASS_PANE
-  sell-hand: HOPPER
-  sell-all: CHEST
-  confirm: LIME_STAINED_GLASS_PANE
-
+  sell-all: EMERALD_BLOCK
+  return-all: HOPPER
+  close: BARRIER
+  info: BOOK
 names:
   border-filler: " "
-  sell-hand: "<yellow>Jual Item di Tangan"
-  sell-all: "<yellow>Jual Semua Inventory"
-  confirm: "<green>Tutup"
+  sell-all: "<green>Jual Semua di Keranjang"
+  return-all: "<yellow>Kembalikan ke Inventory"
+  close: "<red>Tutup"
+  info: "<gold>Info Keranjang"
