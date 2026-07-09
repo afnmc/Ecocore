@@ -11,18 +11,14 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryHolder;
 
-import java.util.Arrays;
-
 /**
- * Routes every click/drag inside a custom EcoCore GUI to that GUI's own
- * {@code handleClick} method via {@link GuiSessionManager}, and cleans up
- * the session on close.
- *
+ * Routes every click/drag inside a custom EcoCore GUI.
+ * 
  * <p><b>SPECIAL CASE:</b> {@link SellGui} allows item movement in its cart
  * area (slots 10-16, 19-25, 28-34) so players can drag items from their
  * inventory into the cart. All other slots in SellGui are locked buttons.
  * For all other GUIs, clicks are always cancelled to prevent item
- * duplication/theft from what are meant to be non-inventory menus.</p>
+ * duplication/theft.</p>
  */
 public final class InventoryClickListener implements Listener {
     private final GuiSessionManager sessionManager;
@@ -37,31 +33,18 @@ public final class InventoryClickListener implements Listener {
         if (!(holder instanceof AbstractGui gui)) {
             return;
         }
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            event.setCancelled(true);
+        
+        // SPECIAL CASE: SellGui Cart Area
+        if (gui instanceof SellGui && SellGui.isCartSlot(event.getRawSlot())) {
+            event.setCancelled(false); // Allow item movement in cart
             return;
         }
 
-        // SPECIAL CASE: SellGui allows item movement in cart slots
-        if (gui instanceof SellGui) {
-            int rawSlot = event.getRawSlot();
-            int[] cartSlots = SellGui.getCartSlots();
-            boolean isCartSlot = Arrays.stream(cartSlots).anyMatch(slot -> slot == rawSlot);
-
-            // If clicking in cart area, allow it (don't cancel)
-            if (isCartSlot) {
-                return;
-            }
-            // Otherwise, cancel and route to button handler
-            event.setCancelled(true);
-            if (event.getClickedInventory() != null && event.getClickedInventory().equals(event.getInventory())) {
-                gui.handleClick(player, rawSlot, event.getClick());
-            }
-            return;
-        }
-
-        // All other GUIs: cancel all clicks, route to button handler
+        // Default: Cancel all clicks in EcoCore GUIs
         event.setCancelled(true);
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
         if (event.getClickedInventory() == null || !event.getClickedInventory().equals(event.getInventory())) {
             return;
         }
@@ -75,19 +58,16 @@ public final class InventoryClickListener implements Listener {
             return;
         }
 
-        // SPECIAL CASE: SellGui allows drag in cart slots
+        // SPECIAL CASE: SellGui Cart Area Drag
         if (gui instanceof SellGui) {
-            int[] cartSlots = SellGui.getCartSlots();
-            boolean allSlotsAreCart = event.getRawSlots().stream()
-                .allMatch(slot -> Arrays.stream(cartSlots).anyMatch(cartSlot -> cartSlot == slot));
-            if (allSlotsAreCart) {
-                return; // Allow drag in cart area
+            boolean allInCart = event.getRawSlots().stream().allMatch(SellGui::isCartSlot);
+            if (allInCart) {
+                event.setCancelled(false); // Allow drag in cart
+                return;
             }
-            event.setCancelled(true);
-            return;
         }
 
-        // All other GUIs: cancel all drags
+        // Default: Cancel drags
         event.setCancelled(true);
     }
 
@@ -103,4 +83,4 @@ public final class InventoryClickListener implements Listener {
         gui.onClose(player);
         sessionManager.closeSession(player.getUniqueId());
     }
-                           }
+}
