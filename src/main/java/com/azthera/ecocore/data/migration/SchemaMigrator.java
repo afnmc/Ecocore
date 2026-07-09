@@ -1,7 +1,6 @@
 package com.azthera.ecocore.data.migration;
 
 import com.azthera.ecocore.data.DatabaseManager;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +14,6 @@ import java.util.logging.Logger;
  * table so migrations only ever run once against a given database.
  */
 public final class SchemaMigrator {
-
     private final DatabaseManager databaseManager;
     private final Logger logger;
     private final List<MigrationScript> migrationScripts;
@@ -25,16 +23,15 @@ public final class SchemaMigrator {
         this.logger = logger;
         this.migrationScripts = List.of(
             new V1__InitialSchema(),
-            new V2__AddJobJoinedColumn()
+            new V2__AddJobJoinedColumn(),
+            new V3__AddSellPrice()
         );
     }
 
     public void migrate() {
         SqlDialect dialect = new SqlDialect(databaseManager.getDatabaseType());
-
         try (Connection connection = databaseManager.getConnection()) {
             int currentVersion = readCurrentVersion(connection);
-
             for (MigrationScript script : migrationScripts) {
                 if (script.getVersion() > currentVersion) {
                     logger.info(() -> "Applying migration V" + script.getVersion() + ": " + script.getDescription());
@@ -52,7 +49,6 @@ public final class SchemaMigrator {
     private int readCurrentVersion(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS ecocore_schema_version (version INTEGER NOT NULL)");
-
             try (ResultSet resultSet = statement.executeQuery("SELECT version FROM ecocore_schema_version LIMIT 1")) {
                 if (resultSet.next()) {
                     return resultSet.getInt("version");
