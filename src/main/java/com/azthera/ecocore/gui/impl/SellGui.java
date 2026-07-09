@@ -21,12 +21,11 @@ import java.util.List;
 
 /**
  * Cart-style Sell GUI: players drag items from their inventory into a
- * 27-slot storage area (3 rows), then click "Sell All" to sell everything
- * in the cart. If the player closes the GUI without selling, all items
- * remaining in the cart are returned to their inventory.
+ * 27-slot storage area (3 rows), then click "Sell All" to sell everything.
+ * If the player closes the GUI without selling, items are returned.
  */
 public final class SellGui extends AbstractGui {
-    // Cart area: rows 1-3 (slots 10-16, 19-25, 28-34)
+    // Area keranjang (Row 1-3)
     private static final int[] CART_SLOTS = {
         10, 11, 12, 13, 14, 15, 16,
         19, 20, 21, 22, 23, 24, 25,
@@ -70,7 +69,7 @@ public final class SellGui extends AbstractGui {
             }
         }
 
-        // Cart area (rows 1-3) — leave empty so players can drag items in
+        // Cart area (rows 1-3) — Kosongkan agar player bisa drag item
         for (int slot : CART_SLOTS) {
             if (inventory.getItem(slot) == null) {
                 inventory.setItem(slot, null);
@@ -99,7 +98,7 @@ public final class SellGui extends AbstractGui {
             (player, clickType) -> player.closeInventory()
         ));
 
-        // Info slot (header center)
+        // Info slot
         setButton(INFO_SLOT, GuiButton.display(
             ItemBuilder.of(Material.BOOK)
                 .name(Component.text("Info Keranjang", NamedTextColor.GOLD))
@@ -183,10 +182,12 @@ public final class SellGui extends AbstractGui {
     }
 
     /**
-     * @return the array of slot indices that make up the cart storage area.
-     * Used by {@code InventoryClickListener} to allow drag/drop only in these slots.
+     * Helper for InventoryClickListener to check if a slot is part of the cart.
      */
-    public static int[] getCartSlots() {
-        return CART_SLOTS.clone();
+    public static boolean isCartSlot(int slot) {
+        for (int s : CART_SLOTS) {
+            if (s == slot) return true;
+        }
+        return false;
     }
-                      }
+                  }
