@@ -14,7 +14,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.logging.Level;
 
 /**
@@ -27,7 +26,6 @@ import java.util.logging.Level;
  * the command "just doesn't work".
  */
 public final class ShopOpenSubCommand implements SubCommand {
-
     private final ShopManager shopManager;
     private final ShopTransactionService shopTransactionService;
     private final GuiConfig guiConfig;
@@ -74,14 +72,12 @@ public final class ShopOpenSubCommand implements SubCommand {
             sender.sendMessage(messageService.render("general.player-only"));
             return;
         }
-
         if (shopManager.getAllDefinitions().isEmpty()) {
             player.sendMessage(Component.text(
                 "Shop belum siap (katalog belum termuat). Coba lagi sebentar atau hubungi admin.",
                 NamedTextColor.RED));
             return;
         }
-
         try {
             new ShopGui(shopManager, shopTransactionService, guiConfig.getShopGui(), iconResolver, messageService,
                 sessionManager, numberFormatter, null).open(player);
@@ -95,4 +91,4 @@ public final class ShopOpenSubCommand implements SubCommand {
             );
         }
     }
-                }
+}
