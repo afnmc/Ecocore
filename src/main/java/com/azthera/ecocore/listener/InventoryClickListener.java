@@ -103,4 +103,4 @@ public final class InventoryClickListener implements Listener {
         gui.onClose(player);
         sessionManager.closeSession(player.getUniqueId());
     }
-}
+                           }
