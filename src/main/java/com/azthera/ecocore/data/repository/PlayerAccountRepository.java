@@ -12,6 +12,18 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
+/**
+ * Repository for player currency balances. Wraps {@link PlayerAccountDAO} with
+ * an in-memory cache keyed by "{playerId}:{currencyId}" so that balance checks
+ * during shop transactions and Vault economy calls do not block on the database.
+ * Writes go to the cache immediately (synchronously) and are persisted to the
+ * database asynchronously.
+ *
+ * <p><b>Since V3:</b> Fixed race condition in {@link #loadForPlayerAsync(UUID)}
+ * where an async load from database could overwrite a newer cache entry that
+ * was updated by {@code /eco give} or a shop transaction. Now only overwrites
+ * cache if the loaded data is newer than what's already cached.</p>
+ */
 public final class PlayerAccountRepository {
     private final PlayerAccountDAO dao;
     private final AsyncUtil asyncUtil;
@@ -28,6 +40,11 @@ public final class PlayerAccountRepository {
         return playerId + ":" + currencyId;
     }
 
+    /**
+     * Synchronous, cache-only read. Returns empty if the account has not been
+     * loaded into cache yet — callers on a hot path (Vault bridge) should have
+     * already triggered a load via {@link #loadForPlayerAsync(UUID)} on join.
+     */
     public Optional<PlayerAccount> getCached(UUID playerId, String currencyId) {
         return cache.get(key(playerId, currencyId));
     }
@@ -49,7 +66,7 @@ public final class PlayerAccountRepository {
         return asyncUtil.supplyAsync(() -> {
             try {
                 List<PlayerAccount> accounts = dao.findAllForPlayer(playerId);
-                // FIX: Jangan overwrite cache kalau account sudah ada dengan timestamp lebih baru
+                // FIX: Don't overwrite cache if cached account is newer than loaded one
                 accounts.forEach(loadedAccount -> {
                     String key = key(playerId, loadedAccount.getCurrencyId());
                     Optional<PlayerAccount> cached = cache.get(key);
@@ -65,6 +82,10 @@ public final class PlayerAccountRepository {
         });
     }
 
+    /**
+     * Updates the cache immediately and schedules an async persist.
+     * This is the primary write path used by EconomyService.
+     */
     public void save(PlayerAccount account) {
         cache.put(key(account.getPlayerId(), account.getCurrencyId()), account);
         asyncUtil.runAsync(() -> {
@@ -125,4 +146,4 @@ public final class PlayerAccountRepository {
             }
         });
     }
-}
+                           }
