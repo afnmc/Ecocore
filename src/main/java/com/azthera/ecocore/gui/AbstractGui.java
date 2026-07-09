@@ -10,20 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Base class for every custom inventory menu in EcoCore. Owns the raw
- * {@link Inventory}, a slot-to-{@link GuiButton} map used to dispatch clicks,
- * and registers itself with {@link GuiSessionManager} on open. Subclasses
- * implement {@link #render()} to (re)populate their contents and may
- * override {@link #onClose(Player)} for cleanup.
- *
- * <p><b>Since V3:</b> The {@code inventory} field is {@code protected} (not
- * {@code private}) so subclasses like {@code SellGui} that implement cart-style
- * drag/drop interfaces can directly manipulate inventory slots. External code
- * outside the class hierarchy still cannot access it, preserving encapsulation.</p>
+ * Base class for every custom inventory menu in EcoCore.
+ * 
+ * <p><b>Since V3.1:</b> The {@code inventory} field is now {@code protected}
+ * (instead of {@code private}) so subclasses like {@code SellGui} that implement
+ * cart-style drag/drop interfaces can directly manipulate inventory slots.</p>
  */
 public abstract class AbstractGui implements InventoryHolder {
-    // FIX: Changed from 'private' to 'protected' so subclasses like SellGui 
-    // can directly manipulate inventory slots for cart-style drag/drop.
+    // FIX: Changed from 'private' to 'protected' to allow SellGui cart access
     protected final Inventory inventory;
     private final GuiSessionManager sessionManager;
     private final Map<Integer, GuiButton> buttons = new HashMap<>();
@@ -38,19 +32,8 @@ public abstract class AbstractGui implements InventoryHolder {
         return inventory;
     }
 
-    /**
-     * (Re)populates the inventory's contents and the slot->button map.
-     * Implementations should call {@link #setButton(int, GuiButton)} for
-     * every interactive slot and {@code getInventory().setItem(slot, item)}
-     * directly for purely decorative slots (border fillers, etc).
-     */
     public abstract void render();
 
-    /**
-     * Called by {@code InventoryClickListener} when the inventory this GUI
-     * owns is closed by the player, before the session is removed from
-     * {@link GuiSessionManager}. Default implementation does nothing.
-     */
     public void onClose(Player player) {
     }
 
