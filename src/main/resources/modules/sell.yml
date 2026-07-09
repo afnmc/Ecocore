@@ -1,12 +1,15 @@
 # Sell module (Sell GUI, sell-hand, sell-inventory, auto-sell).
 #
+# ============================================================================
 # CATATAN PENTING soal harga aman:
+# ============================================================================
 # - SellService HANYA menjual item yang SUDAH terdaftar di Dynamic Shop
 #   (shopManager.getDefinition(itemId)) — kalau item tidak ada di shop
 #   catalog, item itu otomatis TIDAK BISA dijual sama sekali, berapapun
 #   whitelist/blacklist di bawah ini diatur. Starter shop catalog bawaan
-#   EcoCore CUMA berisi ores/farming/wood/fishing (lihat modules/shop.yml),
-#   jadi elytra, netherite gear, totem, dll TIDAK sellable secara default.
+#   EcoCore CUMA berisi ores/farming/wood/fishing/mobs/building (lihat
+#   modules/shop-items.yml), jadi elytra, netherite gear, totem, dll
+#   TIDAK sellable secara default.
 # - blacklist di bawah ini adalah lapisan pengaman KEDUA (defense-in-depth):
 #   walaupun suatu saat admin iseng mendaftarkan item ini ke shop catalog,
 #   item-item di blacklist tetap tidak akan bisa dijual lewat Sell module.
@@ -14,10 +17,28 @@
 #   SUDAH di-clamp oleh ElasticPricingEngine — bukan menambah harga baru,
 #   jadi tidak mungkin menghasilkan angka infinity/NaN selama basePrice,
 #   minPrice, dan maxPrice item tersebut adalah angka wajar dan finite.
+# - Harga jual yang ditampilkan ke pemain di Sell GUI dan Shop GUI adalah
+#   sellPrice (bukan currentPrice/buyPrice). Spread default 30% (sell = 70%
+#   dari buy) mencegah arbitrage.
+#
+# ============================================================================
+# STRUKTUR HARGA:
+# ============================================================================
+# Setiap item di shop memiliki 3 harga:
+#   - base-price: harga dasar (acuan)
+#   - current-price (buy price): harga beli dari NPC
+#   - sell-price: harga jual ke NPC (default 70% dari buy price)
+#
+# Sell module SELALU menggunakan sell-price, bukan buy-price. Ini mencegah
+# pemain membeli dari NPC lalu langsung jual balik dengan profit.
 
 whitelist: []   # kalau diisi, HANYA material di list ini yang bisa dijual (blacklist diabaikan).
 
+# Blacklist item OP yang TIDAK BOLEH dijual lewat Sell module, walaupun
+# item tersebut somehow terdaftar di shop catalog. Ini adalah lapisan
+# pengaman kedua setelah ShopCatalogLoader's OP_MATERIALS check.
 blacklist:
+  # Armor & Tools OP
   - ELYTRA
   - NETHERITE_SWORD
   - NETHERITE_PICKAXE
@@ -28,28 +49,55 @@ blacklist:
   - NETHERITE_CHESTPLATE
   - NETHERITE_LEGGINGS
   - NETHERITE_BOOTS
+  - DIAMOND_SWORD
+  - DIAMOND_PICKAXE
+  - DIAMOND_AXE
+  - DIAMOND_SHOVEL
+  - DIAMOND_HOE
+  - DIAMOND_HELMET
+  - DIAMOND_CHESTPLATE
+  - DIAMOND_LEGGINGS
+  - DIAMOND_BOOTS
+
+  # Material OP
   - NETHERITE_INGOT
   - NETHERITE_BLOCK
-  - TOTEM_OF_UNDYING
-  - ENCHANTED_GOLDEN_APPLE
   - NETHER_STAR
   - DRAGON_EGG
   - DRAGON_HEAD
   - BEACON
+  - TOTEM_OF_UNDYING
+  - ENCHANTED_GOLDEN_APPLE
   - ENCHANTED_BOOK
   - SHULKER_BOX
+
+  # Item khusus
   - WRITTEN_BOOK
   - PLAYER_HEAD
+  - SPAWNER
+
+  # Block admin/creative
   - COMMAND_BLOCK
+  - CHAIN_COMMAND_BLOCK
+  - REPEATING_COMMAND_BLOCK
   - BARRIER
   - STRUCTURE_BLOCK
   - STRUCTURE_VOID
   - JIGSAW
   - DEBUG_STICK
-  - SPAWNER
+  - LIGHT
 
+# Multiplier untuk harga jual. Global multiplier dikalikan ke SEMUA item,
+# per-material multiplier dikalikan ke item spesifik. Permission bonus
+# (ecocore.sell.bonus.tier1/2/3) juga dikalikan setelahnya.
+#
+# Contoh: diamond dengan global 1.0, per-material 1.05, dan player punya
+# tier1 (1.05) akan mendapat total multiplier = 1.0 * 1.05 * 1.05 = 1.1025
+# Jadi harga jual diamond = sellPrice * 1.1025
 multiplier:
   global: 1.0
   per-material:
     DIAMOND: 1.05
     EMERALD: 1.05
+    GOLD_INGOT: 1.03
+    IRON_INGOT: 1.02
