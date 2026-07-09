@@ -252,6 +252,7 @@ public final class ShopGui extends PaginatedGui {
         return GuiButton.display(iconResolver.resolveIcon(guiConfig, "next-page"));
     }
 
+    @SuppressWarnings("removal")
     private void promptSearch(Player player) {
         player.closeInventory();
         ConversationFactory factory = new ConversationFactory(JavaPlugin.getProvidingPlugin(ShopGui.class))
