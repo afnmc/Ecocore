@@ -6,16 +6,24 @@
 # dinamisnya di database TIDAK di-reset oleh reload — hanya item baru
 # yang akan dibuatkan record harga awal).
 #
+# ============================================================================
 # ATURAN AMAN HARGA (WAJIB dibaca sebelum menambah item baru):
+# ============================================================================
 # - min-price dan max-price WAJIB diisi masuk akal untuk SETIAP item.
 #   ElasticPricingEngine akan selalu meng-clamp harga akhir ke rentang ini,
 #   jadi harga tidak akan pernah melebihi max-price walau demand meledak.
+# - sell-price adalah harga jual ke pemain. Default = 70% dari base-price
+#   (spread 30%). Ini mencegah arbitrage (beli dari NPC lalu jual balik
+#   ke NPC dengan profit). JANGAN set sell-price > base-price kecuali kamu
+#   benar-benar tahu apa yang kamu lakukan.
 # - JANGAN mendaftarkan item langka/OP (elytra, netherite gear, totem of
 #   undying, enchanted golden apple, nether star, shulker box, dll) kecuali
 #   kamu benar-benar sudah mengatur min-price/max-price yang wajar untuk
 #   ekonomi server-mu. Item-item tersebut juga tetap diblokir di level Sell
 #   module lewat blacklist di modules/sell.yml sebagai lapisan pengaman
 #   kedua, terlepas dari apakah item itu didaftarkan di sini atau tidak.
+#   Jika kamu memang ingin mendaftarkan item OP, tambahkan "allow-op: true"
+#   di section item tersebut.
 # - elasticity yang lebih tinggi (mendekati 1.0) membuat harga bereaksi
 #   lebih cepat terhadap demand/supply; nilai wajar ada di 0.10–0.25.
 # - restock-seconds dan stock mengatur seberapa cepat & seberapa banyak
@@ -25,34 +33,74 @@
 # - buyable: false membuat item HANYA bisa dijual (tidak dijual NPC ke
 #   pemain), berguna untuk drop hasil farming/mining yang memang cuma untuk
 #   dijual, bukan dibeli ulang.
+#
+# ============================================================================
+# STRUKTUR HARGA:
+# ============================================================================
+# Setiap item memiliki 3 harga:
+#   - base-price: harga dasar (acuan)
+#   - current-price (buy price): harga beli dari NPC, berfluktuasi dinamis
+#     berdasarkan demand/supply, di-clamp ke [min-price, max-price]
+#   - sell-price: harga jual ke NPC, juga berfluktuasi tapi terpisah dari
+#     buy price. Default = 70% dari buy price (spread 30%).
+#
+# Pemain melihat kedua harga (buy & sell) di GUI shop, jadi mereka tahu
+# persis berapa spread-nya sebelum transaksi.
+#
+# ============================================================================
+# ITEM YANG TIDAK BOLEH DIDAFTARKAN (kecuali allow-op: true):
+# ============================================================================
+# ELYTRA, NETHERITE_SWORD, NETHERITE_PICKAXE, NETHERITE_AXE, NETHERITE_SHOVEL,
+# NETHERITE_HOE, NETHERITE_HELMET, NETHERITE_CHESTPLATE, NETHERITE_LEGGINGS,
+# NETHERITE_BOOTS, NETHERITE_INGOT, NETHERITE_BLOCK, TOTEM_OF_UNDYING,
+# ENCHANTED_GOLDEN_APPLE, NETHER_STAR, DRAGON_EGG, DRAGON_HEAD, BEACON,
+# SHULKER_BOX, COMMAND_BLOCK, BARRIER, STRUCTURE_BLOCK, STRUCTURE_VOID,
+# JIGSAW, DEBUG_STICK, SPAWNER
+#
+# Item-item di atas secara default DITOLAK oleh ShopCatalogLoader untuk
+# mencegah kerusakan ekonomi. Jika kamu memang ingin mendaftarkannya,
+# tambahkan "allow-op: true" di section item tersebut.
 
 categories:
   ores:
     display-name: "Ores & Minerals"
     icon: IRON_INGOT
     sort-order: 1
-
   farming:
     display-name: "Farming"
     icon: WHEAT
     sort-order: 2
-
   wood:
     display-name: "Wood"
     icon: OAK_LOG
     sort-order: 3
-
   fishing:
     display-name: "Fishing"
     icon: FISHING_ROD
     sort-order: 4
+  mobs:
+    display-name: "Mob Drops"
+    icon: ROTTEN_FLESH
+    sort-order: 5
+  building:
+    display-name: "Building Blocks"
+    icon: COBBLESTONE
+    sort-order: 6
+  minions:
+    display-name: "Minions"
+    icon: ARMOR_STAND
+    sort-order: 10
 
 items:
+  # ==========================================================================
+  # ORES & MINERALS
+  # ==========================================================================
   coal:
     category: ores
     material: COAL
     display-name: "Coal"
     base-price: 4.0
+    sell-price: 2.8
     min-price: 1.0
     max-price: 20.0
     elasticity: 0.15
@@ -60,12 +108,12 @@ items:
     stock: 640
     buyable: true
     sellable: true
-
   iron_ingot:
     category: ores
     material: IRON_INGOT
     display-name: "Iron Ingot"
     base-price: 10.0
+    sell-price: 7.0
     min-price: 3.0
     max-price: 50.0
     elasticity: 0.15
@@ -73,12 +121,12 @@ items:
     stock: 320
     buyable: true
     sellable: true
-
   gold_ingot:
     category: ores
     material: GOLD_INGOT
     display-name: "Gold Ingot"
     base-price: 18.0
+    sell-price: 12.6
     min-price: 5.0
     max-price: 80.0
     elasticity: 0.18
@@ -86,12 +134,12 @@ items:
     stock: 256
     buyable: true
     sellable: true
-
   diamond:
     category: ores
     material: DIAMOND
     display-name: "Diamond"
     base-price: 60.0
+    sell-price: 42.0
     min-price: 20.0
     max-price: 250.0
     elasticity: 0.20
@@ -99,12 +147,12 @@ items:
     stock: 64
     buyable: true
     sellable: true
-
   emerald:
     category: ores
     material: EMERALD
     display-name: "Emerald"
     base-price: 45.0
+    sell-price: 31.5
     min-price: 15.0
     max-price: 200.0
     elasticity: 0.20
@@ -112,12 +160,68 @@ items:
     stock: 64
     buyable: true
     sellable: true
+  lapis_lazuli:
+    category: ores
+    material: LAPIS_LAZULI
+    display-name: "Lapis Lazuli"
+    base-price: 6.0
+    sell-price: 4.2
+    min-price: 2.0
+    max-price: 30.0
+    elasticity: 0.15
+    restock-seconds: 1800
+    stock: 320
+    buyable: true
+    sellable: true
+  redstone:
+    category: ores
+    material: REDSTONE
+    display-name: "Redstone"
+    base-price: 5.0
+    sell-price: 3.5
+    min-price: 1.5
+    max-price: 25.0
+    elasticity: 0.15
+    restock-seconds: 1800
+    stock: 320
+    buyable: true
+    sellable: true
+  quartz:
+    category: ores
+    material: QUARTZ
+    display-name: "Nether Quartz"
+    base-price: 8.0
+    sell-price: 5.6
+    min-price: 2.5
+    max-price: 40.0
+    elasticity: 0.16
+    restock-seconds: 1800
+    stock: 256
+    buyable: true
+    sellable: true
+  copper_ingot:
+    category: ores
+    material: COPPER_INGOT
+    display-name: "Copper Ingot"
+    base-price: 6.0
+    sell-price: 4.2
+    min-price: 2.0
+    max-price: 30.0
+    elasticity: 0.14
+    restock-seconds: 1800
+    stock: 320
+    buyable: true
+    sellable: true
 
+  # ==========================================================================
+  # FARMING
+  # ==========================================================================
   wheat:
     category: farming
     material: WHEAT
     display-name: "Wheat"
     base-price: 2.0
+    sell-price: 1.4
     min-price: 0.5
     max-price: 10.0
     elasticity: 0.12
@@ -125,12 +229,12 @@ items:
     stock: 640
     buyable: true
     sellable: true
-
   carrot:
     category: farming
     material: CARROT
     display-name: "Carrot"
     base-price: 2.0
+    sell-price: 1.4
     min-price: 0.5
     max-price: 10.0
     elasticity: 0.12
@@ -138,12 +242,12 @@ items:
     stock: 640
     buyable: true
     sellable: true
-
   potato:
     category: farming
     material: POTATO
     display-name: "Potato"
     base-price: 2.0
+    sell-price: 1.4
     min-price: 0.5
     max-price: 10.0
     elasticity: 0.12
@@ -151,12 +255,12 @@ items:
     stock: 640
     buyable: true
     sellable: true
-
   pumpkin:
     category: farming
     material: PUMPKIN
     display-name: "Pumpkin"
     base-price: 5.0
+    sell-price: 3.5
     min-price: 1.0
     max-price: 25.0
     elasticity: 0.14
@@ -164,12 +268,55 @@ items:
     stock: 256
     buyable: true
     sellable: true
+  melon_slice:
+    category: farming
+    material: MELON_SLICE
+    display-name: "Melon Slice"
+    base-price: 1.5
+    sell-price: 1.0
+    min-price: 0.3
+    max-price: 8.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
+  sugar_cane:
+    category: farming
+    material: SUGAR_CANE
+    display-name: "Sugar Cane"
+    base-price: 3.0
+    sell-price: 2.1
+    min-price: 0.8
+    max-price: 15.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  beetroot:
+    category: farming
+    material: BEETROOT
+    display-name: "Beetroot"
+    base-price: 2.0
+    sell-price: 1.4
+    min-price: 0.5
+    max-price: 10.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
 
+  # ==========================================================================
+  # WOOD
+  # ==========================================================================
   oak_log:
     category: wood
     material: OAK_LOG
     display-name: "Oak Log"
     base-price: 3.0
+    sell-price: 2.1
     min-price: 1.0
     max-price: 15.0
     elasticity: 0.12
@@ -177,12 +324,12 @@ items:
     stock: 640
     buyable: true
     sellable: true
-
   spruce_log:
     category: wood
     material: SPRUCE_LOG
     display-name: "Spruce Log"
     base-price: 3.0
+    sell-price: 2.1
     min-price: 1.0
     max-price: 15.0
     elasticity: 0.12
@@ -190,12 +337,68 @@ items:
     stock: 640
     buyable: true
     sellable: true
+  birch_log:
+    category: wood
+    material: BIRCH_LOG
+    display-name: "Birch Log"
+    base-price: 3.0
+    sell-price: 2.1
+    min-price: 1.0
+    max-price: 15.0
+    elasticity: 0.12
+    restock-seconds: 1200
+    stock: 640
+    buyable: true
+    sellable: true
+  jungle_log:
+    category: wood
+    material: JUNGLE_LOG
+    display-name: "Jungle Log"
+    base-price: 3.5
+    sell-price: 2.45
+    min-price: 1.2
+    max-price: 18.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  acacia_log:
+    category: wood
+    material: ACACIA_LOG
+    display-name: "Acacia Log"
+    base-price: 3.5
+    sell-price: 2.45
+    min-price: 1.2
+    max-price: 18.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  dark_oak_log:
+    category: wood
+    material: DARK_OAK_LOG
+    display-name: "Dark Oak Log"
+    base-price: 3.5
+    sell-price: 2.45
+    min-price: 1.2
+    max-price: 18.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
 
+  # ==========================================================================
+  # FISHING
+  # ==========================================================================
   cod:
     category: fishing
     material: COD
     display-name: "Cod"
     base-price: 4.0
+    sell-price: 2.8
     min-price: 1.0
     max-price: 20.0
     elasticity: 0.15
@@ -203,12 +406,12 @@ items:
     stock: 320
     buyable: true
     sellable: true
-
   salmon:
     category: fishing
     material: SALMON
     display-name: "Salmon"
     base-price: 5.0
+    sell-price: 3.5
     min-price: 1.5
     max-price: 25.0
     elasticity: 0.15
@@ -216,3 +419,327 @@ items:
     stock: 320
     buyable: true
     sellable: true
+  tropical_fish:
+    category: fishing
+    material: TROPICAL_FISH
+    display-name: "Tropical Fish"
+    base-price: 8.0
+    sell-price: 5.6
+    min-price: 2.5
+    max-price: 40.0
+    elasticity: 0.18
+    restock-seconds: 1800
+    stock: 192
+    buyable: true
+    sellable: true
+  pufferfish:
+    category: fishing
+    material: PUFFERFISH
+    display-name: "Pufferfish"
+    base-price: 6.0
+    sell-price: 4.2
+    min-price: 2.0
+    max-price: 30.0
+    elasticity: 0.16
+    restock-seconds: 1500
+    stock: 256
+    buyable: true
+    sellable: true
+
+  # ==========================================================================
+  # MOB DROPS
+  # ==========================================================================
+  rotten_flesh:
+    category: mobs
+    material: ROTTEN_FLESH
+    display-name: "Rotten Flesh"
+    base-price: 1.5
+    sell-price: 1.0
+    min-price: 0.3
+    max-price: 8.0
+    elasticity: 0.12
+    restock-seconds: 900
+    stock: 640
+    buyable: true
+    sellable: true
+  bone:
+    category: mobs
+    material: BONE
+    display-name: "Bone"
+    base-price: 2.5
+    sell-price: 1.75
+    min-price: 0.6
+    max-price: 12.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  string:
+    category: mobs
+    material: STRING
+    display-name: "String"
+    base-price: 3.0
+    sell-price: 2.1
+    min-price: 0.8
+    max-price: 15.0
+    elasticity: 0.14
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  spider_eye:
+    category: mobs
+    material: SPIDER_EYE
+    display-name: "Spider Eye"
+    base-price: 4.0
+    sell-price: 2.8
+    min-price: 1.0
+    max-price: 20.0
+    elasticity: 0.15
+    restock-seconds: 1500
+    stock: 320
+    buyable: true
+    sellable: true
+  gunpowder:
+    category: mobs
+    material: GUNPOWDER
+    display-name: "Gunpowder"
+    base-price: 5.0
+    sell-price: 3.5
+    min-price: 1.5
+    max-price: 25.0
+    elasticity: 0.16
+    restock-seconds: 1500
+    stock: 320
+    buyable: true
+    sellable: true
+  slime_ball:
+    category: mobs
+    material: SLIME_BALL
+    display-name: "Slime Ball"
+    base-price: 6.0
+    sell-price: 4.2
+    min-price: 2.0
+    max-price: 30.0
+    elasticity: 0.17
+    restock-seconds: 1800
+    stock: 256
+    buyable: true
+    sellable: true
+  blaze_rod:
+    category: mobs
+    material: BLAZE_ROD
+    display-name: "Blaze Rod"
+    base-price: 15.0
+    sell-price: 10.5
+    min-price: 5.0
+    max-price: 70.0
+    elasticity: 0.20
+    restock-seconds: 2400
+    stock: 128
+    buyable: true
+    sellable: true
+  ender_pearl:
+    category: mobs
+    material: ENDER_PEARL
+    display-name: "Ender Pearl"
+    base-price: 12.0
+    sell-price: 8.4
+    min-price: 4.0
+    max-price: 60.0
+    elasticity: 0.19
+    restock-seconds: 2400
+    stock: 128
+    buyable: true
+    sellable: true
+  phantom_membrane:
+    category: mobs
+    material: PHANTOM_MEMBRANE
+    display-name: "Phantom Membrane"
+    base-price: 10.0
+    sell-price: 7.0
+    min-price: 3.0
+    max-price: 50.0
+    elasticity: 0.18
+    restock-seconds: 2400
+    stock: 128
+    buyable: true
+    sellable: true
+
+  # ==========================================================================
+  # BUILDING BLOCKS
+  # ==========================================================================
+  cobblestone:
+    category: building
+    material: COBBLESTONE
+    display-name: "Cobblestone"
+    base-price: 1.0
+    sell-price: 0.7
+    min-price: 0.2
+    max-price: 5.0
+    elasticity: 0.10
+    restock-seconds: 600
+    stock: 1280
+    buyable: true
+    sellable: true
+  stone:
+    category: building
+    material: STONE
+    display-name: "Stone"
+    base-price: 1.5
+    sell-price: 1.0
+    min-price: 0.3
+    max-price: 8.0
+    elasticity: 0.11
+    restock-seconds: 900
+    stock: 960
+    buyable: true
+    sellable: true
+  sand:
+    category: building
+    material: SAND
+    display-name: "Sand"
+    base-price: 1.2
+    sell-price: 0.84
+    min-price: 0.3
+    max-price: 6.0
+    elasticity: 0.11
+    restock-seconds: 900
+    stock: 960
+    buyable: true
+    sellable: true
+  gravel:
+    category: building
+    material: GRAVEL
+    display-name: "Gravel"
+    base-price: 1.0
+    sell-price: 0.7
+    min-price: 0.2
+    max-price: 5.0
+    elasticity: 0.10
+    restock-seconds: 600
+    stock: 1280
+    buyable: true
+    sellable: true
+  dirt:
+    category: building
+    material: DIRT
+    display-name: "Dirt"
+    base-price: 0.5
+    sell-price: 0.35
+    min-price: 0.1
+    max-price: 3.0
+    elasticity: 0.08
+    restock-seconds: 600
+    stock: 1280
+    buyable: true
+    sellable: true
+  glass:
+    category: building
+    material: GLASS
+    display-name: "Glass"
+    base-price: 3.0
+    sell-price: 2.1
+    min-price: 0.8
+    max-price: 15.0
+    elasticity: 0.13
+    restock-seconds: 1200
+    stock: 480
+    buyable: true
+    sellable: true
+  brick:
+    category: building
+    material: BRICK
+    display-name: "Brick"
+    base-price: 4.0
+    sell-price: 2.8
+    min-price: 1.0
+    max-price: 20.0
+    elasticity: 0.14
+    restock-seconds: 1500
+    stock: 320
+    buyable: true
+    sellable: true
+
+  # ==========================================================================
+  # MINIONS (Minion Spawn Items)
+  # ==========================================================================
+  # Item-item di bawah ini adalah "Minion Spawn Item". Saat dibeli, pemain
+  # menerima item khusus (bukan material biasa) yang bisa di-place ke dunia
+  # dengan klik-kanan pada block. Setiap minion spawn item:
+  #   - TIDAK BISA dijual balik ke shop (diblokir di ShopTransactionService).
+  #   - Dibatasi oleh limits.max-per-player di modules/minions.yml — pembelian
+  #     akan ditolak jika pemain sudah mencapai batas.
+  #   - Harganya relatif tinggi + stock rendah + restock lama agar tetap
+  #     menjadi reward progresif, bukan shortcut.
+  #   - Elasticity rendah (0.08) agar harga stabil dan tidak mudah terpengaruh
+  #     oleh aksi beli sesaat.
+  #
+  # Material di bawah HANYA untuk icon GUI — item yang sebenarnya diberikan
+  # ke pemain ditentukan oleh ShopTransactionService berdasarkan tipe minion.
+  minion_miner:
+    category: minions
+    material: IRON_PICKAXE
+    display-name: "Miner Minion"
+    base-price: 25000.0
+    sell-price: 17500.0
+    min-price: 12500.0
+    max-price: 50000.0
+    elasticity: 0.08
+    restock-seconds: 86400
+    stock: 5
+    buyable: true
+    sellable: false
+  minion_farmer:
+    category: minions
+    material: WHEAT
+    display-name: "Farmer Minion"
+    base-price: 20000.0
+    sell-price: 14000.0
+    min-price: 10000.0
+    max-price: 40000.0
+    elasticity: 0.08
+    restock-seconds: 86400
+    stock: 5
+    buyable: true
+    sellable: false
+  minion_lumberjack:
+    category: minions
+    material: IRON_AXE
+    display-name: "Lumberjack Minion"
+    base-price: 22000.0
+    sell-price: 15400.0
+    min-price: 11000.0
+    max-price: 44000.0
+    elasticity: 0.08
+    restock-seconds: 86400
+    stock: 5
+    buyable: true
+    sellable: false
+  minion_fishing:
+    category: minions
+    material: FISHING_ROD
+    display-name: "Fishing Minion"
+    base-price: 18000.0
+    sell-price: 12600.0
+    min-price: 9000.0
+    max-price: 36000.0
+    elasticity: 0.08
+    restock-seconds: 86400
+    stock: 5
+    buyable: true
+    sellable: false
+  minion_collector:
+    category: minions
+    material: HOPPER
+    display-name: "Collector Minion"
+    base-price: 35000.0
+    sell-price: 24500.0
+    min-price: 17500.0
+    max-price: 70000.0
+    elasticity: 0.08
+    restock-seconds: 86400
+    stock: 5
+    buyable: true
+    sellable: false
