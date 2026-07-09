@@ -61,6 +61,11 @@ import java.util.logging.Logger;
  * constructible without a Minions dependency (so it can be disabled cleanly
  * via config) while still enabling the minion-purchase integration when both
  * modules are active.</p>
+ *
+ * <p>Inflation module uses {@code SchedulerAdapter} for broadcasting inflation
+ * notifications to all online players with color-coded symbols (▴ red for up,
+ * ▾ green for down). This requires passing {@code schedulerAdapter} to
+ * {@code InflationAdjustmentService} constructor.</p>
  */
 public final class EcoCorePlugin extends JavaPlugin {
     // Core infrastructure
@@ -304,13 +309,22 @@ public final class EcoCorePlugin extends JavaPlugin {
         );
     }
 
+    /**
+     * Initializes the Inflation module.
+     * 
+     * <p><b>Since V3:</b> {@code InflationAdjustmentService} now requires
+     * {@code SchedulerAdapter} as the 8th parameter for broadcasting
+     * inflation notifications to all online players with color-coded symbols
+     * (▴ red for up, ▾ green for down).</p>
+     */
     private void initializeInflation(Logger logger) {
         this.moneySupplyTracker = new MoneySupplyTracker(economyStatisticsService);
         this.velocityCalculator = new VelocityCalculator();
         this.inflationCalculator = new InflationCalculator(velocityCalculator, configManager.getInflationConfig());
+        // FIX: Added schedulerAdapter as 8th parameter for inflation notifications
         this.inflationAdjustmentService = new InflationAdjustmentService(
             shopItemRepository, moneySupplyTracker, inflationCalculator, taxManager,
-            economyStatisticsService, configManager.getInflationConfig(), logger
+            economyStatisticsService, configManager.getInflationConfig(), logger, schedulerAdapter
         );
         this.inflationModule = new InflationModule(
             inflationAdjustmentService, currencyManager, configManager.getInflationConfig(), schedulerAdapter, logger
@@ -341,6 +355,16 @@ public final class EcoCorePlugin extends JavaPlugin {
         );
     }
 
+    /**
+     * Initializes the Minions module.
+     * 
+     * <p><b>Since V3:</b> Added {@code shopTransactionService.enableMinionSupport(this, minionManager)}
+     * at the end to wire minion-purchase integration into the Dynamic Shop. This enables
+     * the "minion_" prefix detection in {@code ShopTransactionService.buy()} so players can
+     * purchase Minion Spawn Items from the Dynamic Shop. Must happen after both
+     * {@code shopTransactionService} (created in {@code initializeShop}) and
+     * {@code minionManager} (just created above) are fully constructed.</p>
+     */
     private void initializeMinions(Logger logger) {
         this.minionLimitPolicy = new MinionLimitPolicy(minionRepository, configManager.getMinionsConfig());
         this.minionFuelManager = new MinionFuelManager();
@@ -354,7 +378,7 @@ public final class EcoCorePlugin extends JavaPlugin {
             minionRepository, minionLimitPolicy, minionStorageManager, minionTaskScheduler,
             configManager.getMinionsConfig(), logger
         );
-        // --- Wire minion support into ShopTransactionService ---
+        // --- NEW: Wire minion support into ShopTransactionService ---
         // Enables "minion_" prefix detection in buy() so players can purchase
         // Minion Spawn Items from the Dynamic Shop. Must happen after both
         // shopTransactionService and minionManager are fully constructed.
@@ -366,10 +390,18 @@ public final class EcoCorePlugin extends JavaPlugin {
         this.guiIconResolver = new GuiIconResolver();
     }
 
+    /**
+     * Loads the entire shop catalog (categories + items) from
+     * {@code modules/shop-items.yml} via {@link ShopCatalogLoader}.
+     */
     private void loadShopCatalogFromConfig() {
         new ShopCatalogLoader(getLogger()).loadInto(shopManager, configManager.getShopItemsConfig());
     }
 
+    /**
+     * Registers a small starter quest catalog (one per rotation type) so
+     * the Quest module has something to hand out immediately after install.
+     */
     private void registerDefaultQuestCatalog() {
         questRegistry.register(new QuestDefinition(
             "daily_mine_stone", QuestType.DAILY, "Penambang Harian",
@@ -407,6 +439,14 @@ public final class EcoCorePlugin extends JavaPlugin {
         moduleManager.registerModule(minionManager);
     }
 
+    /**
+     * Registers all event listeners.
+     * 
+     * <p><b>Since V3:</b> Added {@code MinionItemListener} registration for
+     * handling right-click interactions with Minion Spawn Items purchased
+     * from the Dynamic Shop, placing the minion in-world and consuming
+     * the item from the player's hand.</p>
+     */
     private void registerListeners() {
         var pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new PlayerJoinQuitListener(
@@ -420,7 +460,7 @@ public final class EcoCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new JobActionListener(
             jobProgressService, autoSellManager, messageService, questManager, numberFormatter
         ), this);
-        // --- Register MinionItemListener ---
+        // --- NEW: Register MinionItemListener ---
         // Handles right-click interactions with Minion Spawn Items purchased
         // from the Dynamic Shop, placing the minion in-world and consuming
         // the item from the player's hand.
@@ -478,6 +518,11 @@ public final class EcoCorePlugin extends JavaPlugin {
         EcoCoreProvider.register(new EcoCoreApiImpl());
     }
 
+    /**
+     * Invoked by {@code /ecocore reload}. Reloads every config file, then
+     * pushes the fresh config objects into every component that holds one,
+     * then finally reloads every registered {@link Module}.
+     */
     private void reloadAllModules() {
         configManager.reloadAll();
         debugLogger.setEnabled(configManager.isDebugMode());
@@ -506,6 +551,9 @@ public final class EcoCorePlugin extends JavaPlugin {
         moduleManager.reloadAll();
     }
 
+    /**
+     * Lightweight {@link Module} wrapper for the Inflation system.
+     */
     private static final class InflationModule implements Module {
         private final InflationAdjustmentService adjustmentService;
         private final CurrencyManager currencyManager;
@@ -558,6 +606,10 @@ public final class EcoCorePlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Concrete {@link EcoCoreAPI} implementation exposing only the
+     * manager/service types intended for third-party consumption.
+     */
     private final class EcoCoreApiImpl implements EcoCoreAPI {
         @Override
         public EconomyService getEconomyService() {
@@ -584,4 +636,4 @@ public final class EcoCorePlugin extends JavaPlugin {
             return getPluginMeta().getVersion();
         }
     }
-}
+    }
