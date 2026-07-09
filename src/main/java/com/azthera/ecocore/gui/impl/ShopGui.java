@@ -31,22 +31,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The Dynamic Shop main menu: browsable, searchable, sortable, paginated
- * catalog of buyable items for a single category (or every item when
- * {@code categoryId} is null). Buy actions route through
- * {@link ShopTransactionService} so displayed prices and actual transaction
- * prices never diverge.
- *
- * <p><b>IMPORTANT:</b> This GUI is BUY-ONLY. Selling is handled exclusively
- * via the Sell GUI (opened by {@code /ecocore sell}). This separation
- * prevents confusion about which price is which (buy vs sell), and makes
- * the UX cleaner — players know exactly where to go to buy or to sell.</p>
- *
- * <p>Each item icon displays both the buy price (gold) and the sell price
- * (green) so players can see the spread at a glance. Click left to buy 1,
- * shift-click left to buy 10. Right-click does nothing in this GUI.</p>
- */
 public final class ShopGui extends PaginatedGui {
     private final ShopManager shopManager;
     private final ShopTransactionService shopTransactionService;
@@ -104,19 +88,24 @@ public final class ShopGui extends PaginatedGui {
     protected void renderStaticElements() {
         ItemStack filler = iconResolver.resolveIcon(guiConfig, "border-filler");
         fillBorder(filler);
-        int col = 1;
-        setButton(col++, GuiButton.of(buildAllCategoriesIcon(), (player, clickType) ->
-            new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
-                getSessionManager(), numberFormatter, null).open(player)));
-        for (ShopCategory category : shopManager.getAllCategories()) {
-            if (col > 7) {
-                break;
-            }
-            int slot = col++;
-            setButton(slot, GuiButton.of(buildCategoryIcon(category), (player, clickType) ->
+        
+        // Jika tidak ada kategori yang dipilih, tampilkan kategori di baris atas
+        if (categoryId == null) {
+            int col = 1;
+            setButton(col++, GuiButton.of(buildAllCategoriesIcon(), (player, clickType) -> {
+                searchFilter.clear();
                 new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
-                    getSessionManager(), numberFormatter, category.getId()).open(player)));
+                    getSessionManager(), numberFormatter, null).open(player);
+            }));
+            for (ShopCategory category : shopManager.getAllCategories()) {
+                if (col > 7) break;
+                int slot = col++;
+                setButton(slot, GuiButton.of(buildCategoryIcon(category), (player, clickType) ->
+                    new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
+                        getSessionManager(), numberFormatter, category.getId()).open(player)));
+            }
         }
+        
         setButton(searchSlot, GuiButton.of(iconResolver.resolveIcon(guiConfig, "search"), (player, clickType) ->
             promptSearch(player)));
         setButton(sortSlot, GuiButton.of(buildSortIcon(), (player, clickType) -> {
@@ -129,21 +118,27 @@ public final class ShopGui extends PaginatedGui {
 
     @Override
     protected List<GuiButton> getAllContentButtons() {
-        List<ShopItemDefinition> definitions = categoryId != null
-            ? new ArrayList<>(shopManager.getDefinitionsForCategory(categoryId))
-            : new ArrayList<>(shopManager.getAllDefinitions());
+        // CATEGORY-FIRST FLOW: Jika categoryId null, tampilkan kategori sebagai "content"
+        if (categoryId == null) {
+            List<GuiButton> categoryButtons = new ArrayList<>();
+            for (ShopCategory category : shopManager.getAllCategories()) {
+                categoryButtons.add(GuiButton.of(buildCategoryIcon(category), (player, clickType) ->
+                    new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
+                        getSessionManager(), numberFormatter, category.getId()).open(player)));
+            }
+            return categoryButtons;
+        }
+
+        // Jika categoryId tidak null, tampilkan item di kategori tersebut
+        List<ShopItemDefinition> definitions = new ArrayList<>(shopManager.getDefinitionsForCategory(categoryId));
         
-        // FIX: Wrap in a new ArrayList to ensure the list is mutable before sorting.
-        // searchFilter.apply() returns an immutable list (List.copyOf or Stream.toList),
-        // which throws UnsupportedOperationException if .sort() is called directly on it.
+        // FIX: Wrap dalam ArrayList baru agar mutable sebelum di-sort
         definitions = new ArrayList<>(searchFilter.apply(definitions));
         
         definitions.sort((a, b) -> {
             var recordA = shopManager.getRecord(a.getItemId());
             var recordB = shopManager.getRecord(b.getItemId());
-            if (recordA.isEmpty() || recordB.isEmpty()) {
-                return 0;
-            }
+            if (recordA.isEmpty() || recordB.isEmpty()) return 0;
             return sortOption.getComparator().compare(recordA.get(), recordB.get());
         });
 
@@ -165,15 +160,10 @@ public final class ShopGui extends PaginatedGui {
             handleItemClick(player, definition, clickType));
     }
 
-    /**
-     * Handles item clicks. BUY-ONLY: left-click buys 1, shift-left-click buys 10.
-     * Right-click does nothing (selling is handled in the Sell GUI).
-     */
     private void handleItemClick(Player player, ShopItemDefinition definition, ClickType clickType) {
-        // Only left-click triggers a buy. Right-click is ignored (sell is in Sell GUI).
-        if (!clickType.isLeftClick()) {
-            return;
-        }
+        // BUY-ONLY: Hanya kiri untuk beli. Jual dipindah ke SellGui.
+        if (!clickType.isLeftClick()) return;
+        
         int quantity = clickType.isShiftClick() ? 10 : 1;
         Result<Double> result = shopTransactionService.buy(player.getUniqueId(), definition.getItemId(), quantity);
         if (result.isSuccess()) {
@@ -187,29 +177,26 @@ public final class ShopGui extends PaginatedGui {
         render();
     }
 
-    /**
-     * Builds the icon for a shop item, displaying both the buy price (gold)
-     * and the sell price (green) so players can see the spread at a glance.
-     * Also shows stock status and buy instructions.
-     */
     private ItemStack buildItemIcon(ShopItemDefinition definition) {
         Material material = Material.matchMaterial(definition.getMaterial());
-        if (material == null) {
-            material = Material.STONE;
-        }
+        if (material == null) material = Material.STONE;
+        
         var recordOpt = shopManager.getRecord(definition.getItemId());
         double buyPrice = recordOpt.map(r -> r.getCurrentPrice()).orElse(definition.getInitialBasePrice());
-        double sellPrice = recordOpt.map(r -> r.getSellPrice()).orElse(definition.getInitialSellPrice());
+        double sellPrice = recordOpt.map(r -> r.getSellPrice()).orElse(definition.getInitialBasePrice() * 0.7);
         int stock = recordOpt.map(r -> r.getStock()).orElse(0);
+        
         ItemBuilder builder = ItemBuilder.of(material).name(Component.text(definition.getDisplayName(), NamedTextColor.YELLOW));
         if (definition.getCustomModelData() > 0) {
             builder.customModelData(definition.getCustomModelData());
         }
-        // Display both buy and sell prices
+        
+        // TAMPILKAN 2 HARGA
         builder.lore(Component.text("Harga Beli: " + numberFormatter.format(buyPrice), NamedTextColor.GOLD));
         builder.lore(Component.text("Harga Jual: " + numberFormatter.format(sellPrice), NamedTextColor.GREEN));
         builder.lore(Component.text("Stok: " + stock, stock > 0 ? NamedTextColor.AQUA : NamedTextColor.RED));
         builder.lore(Component.empty());
+        
         if (definition.isBuyable()) {
             builder.lore(Component.text("Klik kiri: Beli 1", NamedTextColor.GRAY));
             builder.lore(Component.text("Shift-klik kiri: Beli 10", NamedTextColor.GRAY));
@@ -222,17 +209,17 @@ public final class ShopGui extends PaginatedGui {
 
     private ItemStack buildAllCategoriesIcon() {
         return ItemBuilder.of(Material.NETHER_STAR)
-            .name(Component.text("Semua Item", NamedTextColor.AQUA))
+            .name(Component.text("Semua Kategori", NamedTextColor.AQUA))
+            .lore(Component.text("Klik untuk melihat semua kategori.", NamedTextColor.GRAY))
             .build();
     }
 
     private ItemStack buildCategoryIcon(ShopCategory category) {
         Material material = Material.matchMaterial(category.getIconMaterial());
-        if (material == null) {
-            material = Material.CHEST;
-        }
+        if (material == null) material = Material.CHEST;
         return ItemBuilder.of(material)
             .name(Component.text(category.getDisplayName(), NamedTextColor.AQUA))
+            .lore(Component.text("Klik untuk melihat item.", NamedTextColor.GRAY))
             .build();
     }
 
