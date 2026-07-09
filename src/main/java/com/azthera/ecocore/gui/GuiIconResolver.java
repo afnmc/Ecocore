@@ -11,6 +11,11 @@ import org.bukkit.inventory.ItemStack;
  * section by key, falling back to a configurable default material if the
  * key is missing or invalid. This is what makes "Semua icon configurable"
  * (all GUI icons config-driven) work uniformly across every GUI class.
+ *
+ * <p><b>Since V3:</b> The resolver now also reads the {@code names.iconKey}
+ * section from the config to set the display name of the icon. This fixes
+ * the bug where icons like "Compass" would show their vanilla name instead
+ * of the configured name like "Cari Item".</p>
  */
 public final class GuiIconResolver {
     private static final Material FALLBACK_MATERIAL = Material.BARRIER;
