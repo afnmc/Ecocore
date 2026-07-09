@@ -20,6 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Lists the owning player's active/completed quest instances, paginated.
+ * Each quest shows a text-based progress indicator and a claim hint once
+ * completed; clicking a completed, unclaimed quest claims its reward via
+ * {@link QuestManager#claimReward}.
+ *
+ * <p><b>Since V3:</b> Added filter tabs (Daily, Weekly, Monthly, All) at the
+ * top of the GUI so players can quickly filter quests by type. The filter
+ * state is preserved across page navigation and re-renders.</p>
+ */
 public final class QuestGui extends PaginatedGui {
     private static final int PREVIOUS_PAGE_SLOT = 45;
     private static final int NEXT_PAGE_SLOT = 53;
@@ -161,4 +171,4 @@ public final class QuestGui extends PaginatedGui {
     protected GuiButton buildNextPageButton() {
         return GuiButton.display(ItemBuilder.of(Material.ARROW).name(Component.text("Halaman Berikutnya")).build());
     }
-}
+                      }
