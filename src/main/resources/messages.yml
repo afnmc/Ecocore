@@ -25,6 +25,7 @@ shop:
 sell:
   sell-hand-success: "<green>Kamu menjual item di tangan seharga <gold><price></gold>."
   sell-inventory-success: "<green>Kamu menjual seluruh inventory seharga total <gold><price></gold>."
+  cart-sell-success: "<green>Kamu menjual semua item di keranjang seharga total <gold><price></gold>."
   sell-nothing: "<red>Tidak ada item yang bisa dijual."
   item-blocked: "<red>Item ini tidak diperbolehkan untuk dijual."
   auto-sell-enabled: "<green>Auto-sell diaktifkan."
