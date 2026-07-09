@@ -26,6 +26,7 @@ import com.azthera.ecocore.listener.PlayerJoinQuitListener;
 import com.azthera.ecocore.logging.*;
 import com.azthera.ecocore.market.*;
 import com.azthera.ecocore.minions.*;
+import com.azthera.ecocore.minions.MinionItemListener;
 import com.azthera.ecocore.quest.*;
 import com.azthera.ecocore.sell.*;
 import com.azthera.ecocore.shop.*;
@@ -36,7 +37,6 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -48,15 +48,21 @@ import java.util.logging.Logger;
  * No other class in the plugin should construct these objects itself —
  * everything is instantiated exactly once, here.
  *
- * NOTE: the Quest module is initialized BEFORE the Shop module (unlike a
+ * <p>NOTE: the Quest module is initialized BEFORE the Shop module (unlike a
  * naive "economy -> shop -> market -> ... -> quest" ordering) because
  * {@code ShopTransactionService} needs a fully-constructed {@code QuestManager}
  * to report "buy:any"/"sell:any" quest objective progress. Quest's own
  * dependencies (QuestRewardService) only need {@code EconomyService}, which
- * is already available at this point, so this reordering is safe.
+ * is already available at this point, so this reordering is safe.</p>
+ *
+ * <p>Minion support is wired into {@code ShopTransactionService} via a setter
+ * call at the end of {@link #initializeMinions(Logger)}, after both the Shop
+ * and Minions modules are fully constructed. This keeps the Shop module
+ * constructible without a Minions dependency (so it can be disabled cleanly
+ * via config) while still enabling the minion-purchase integration when both
+ * modules are active.</p>
  */
 public final class EcoCorePlugin extends JavaPlugin {
-
     // Core infrastructure
     private SchedulerAdapter schedulerAdapter;
     private ConfigManager configManager;
@@ -65,13 +71,11 @@ public final class EcoCorePlugin extends JavaPlugin {
     private MessageService messageService;
     private NumberFormatter numberFormatter;
     private ModuleManager moduleManager;
-
     // Logging
     private DebugLogger debugLogger;
     private ErrorLogger errorLogger;
     private EconomyLogger economyLogger;
     private AuditLogger auditLogger;
-
     // Repositories
     private PlayerAccountRepository playerAccountRepository;
     private ShopItemRepository shopItemRepository;
@@ -80,7 +84,6 @@ public final class EcoCorePlugin extends JavaPlugin {
     private MinionRepository minionRepository;
     private TransactionLogRepository transactionLogRepository;
     private MarketEventRepository marketEventRepository;
-
     // Economy
     private CurrencyManager currencyManager;
     private TaxManager taxManager;
@@ -88,7 +91,6 @@ public final class EcoCorePlugin extends JavaPlugin {
     private EconomyService economyService;
     private EconomyStatisticsService economyStatisticsService;
     private VaultEconomyProvider vaultEconomyProvider;
-
     // Shop
     private PricingEngine pricingEngine;
     private StockManager stockManager;
@@ -96,7 +98,6 @@ public final class EcoCorePlugin extends JavaPlugin {
     private ShopManager shopManager;
     private ShopNPCManager shopNPCManager;
     private ShopTransactionService shopTransactionService;
-
     // Market
     private DemandSupplyCalculator demandSupplyCalculator;
     private WeightedEconomyModel weightedEconomyModel;
@@ -104,20 +105,17 @@ public final class EcoCorePlugin extends JavaPlugin {
     private MarketEventManager marketEventManager;
     private MarketSimulationEngine marketSimulationEngine;
     private MarketTickTask marketTickTask;
-
     // Inflation
     private MoneySupplyTracker moneySupplyTracker;
     private VelocityCalculator velocityCalculator;
     private InflationCalculator inflationCalculator;
     private InflationAdjustmentService inflationAdjustmentService;
     private InflationModule inflationModule;
-
     // Sell
     private SellFilterManager sellFilterManager;
     private SellMultiplierResolver sellMultiplierResolver;
     private SellService sellService;
     private AutoSellManager autoSellManager;
-
     // Jobs
     private ComboTracker comboTracker;
     private JobRewardCalculator jobRewardCalculator;
@@ -126,7 +124,6 @@ public final class EcoCorePlugin extends JavaPlugin {
     private BonusScheduler bonusScheduler;
     private JobProgressService jobProgressService;
     private JobManager jobManager;
-
     // Quest
     private QuestRegistry questRegistry;
     private QuestChainResolver questChainResolver;
@@ -134,7 +131,6 @@ public final class EcoCorePlugin extends JavaPlugin {
     private QuestRewardService questRewardService;
     private QuestGenerator questGenerator;
     private QuestManager questManager;
-
     // Minions
     private MinionLimitPolicy minionLimitPolicy;
     private MinionFuelManager minionFuelManager;
@@ -142,18 +138,15 @@ public final class EcoCorePlugin extends JavaPlugin {
     private MinionUpgradeService minionUpgradeService;
     private MinionTaskScheduler minionTaskScheduler;
     private MinionManager minionManager;
-
     // GUI framework
     private GuiSessionManager guiSessionManager;
     private GuiIconResolver guiIconResolver;
-
     // Integrations
     private LuckPermsIntegration luckPermsIntegration;
 
     @Override
     public void onEnable() {
         Logger logger = getLogger();
-
         initializeSchedulerAdapter(logger);
         initializeConfig();
         initializeDatabase(logger);
@@ -175,7 +168,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         registerCommands();
         registerIntegrations(logger);
         registerPublicApi();
-
         moduleManager.enableAll();
         logger.info("EcoCore has been enabled successfully.");
     }
@@ -227,7 +219,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         messageService.reload(configManager.getMessagesConfig().asFlatMap());
         this.numberFormatter = new NumberFormatter(2, true);
         this.moduleManager = new ModuleManager(logger);
-
         this.debugLogger = new DebugLogger(logger, configManager.isDebugMode());
         this.errorLogger = new ErrorLogger(logger);
         this.economyLogger = new EconomyLogger(logger);
@@ -236,7 +227,6 @@ public final class EcoCorePlugin extends JavaPlugin {
 
     private void initializeRepositories(Logger logger) {
         SqlDialect dialect = new SqlDialect(databaseManager.getDatabaseType());
-
         PlayerAccountDAO playerAccountDAO = new SqlPlayerAccountDAO(databaseManager, dialect);
         ShopItemDAO shopItemDAO = new SqlShopItemDAO(databaseManager, dialect);
         JobDataDAO jobDataDAO = new SqlJobDataDAO(databaseManager, dialect);
@@ -244,7 +234,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         MinionDAO minionDAO = new SqlMinionDAO(databaseManager, dialect);
         TransactionLogDAO transactionLogDAO = new SqlTransactionLogDAO(databaseManager, dialect);
         MarketEventDAO marketEventDAO = new SqlMarketEventDAO(databaseManager, dialect);
-
         this.playerAccountRepository = new PlayerAccountRepository(playerAccountDAO, asyncUtil, logger);
         this.shopItemRepository = new ShopItemRepository(shopItemDAO, asyncUtil, logger);
         this.jobDataRepository = new JobDataRepository(jobDataDAO, asyncUtil, logger);
@@ -264,7 +253,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         this.economyStatisticsService = new EconomyStatisticsService(
             playerAccountRepository, transactionLogRepository, moneySinkManager
         );
-
         if (getServer().getPluginManager().isPluginEnabled("Vault")) {
             this.vaultEconomyProvider = new VaultEconomyProvider(economyService, currencyManager);
             getServer().getServicesManager().register(Economy.class, vaultEconomyProvider, this, ServicePriority.Highest);
@@ -366,6 +354,11 @@ public final class EcoCorePlugin extends JavaPlugin {
             minionRepository, minionLimitPolicy, minionStorageManager, minionTaskScheduler,
             configManager.getMinionsConfig(), logger
         );
+        // --- Wire minion support into ShopTransactionService ---
+        // Enables "minion_" prefix detection in buy() so players can purchase
+        // Minion Spawn Items from the Dynamic Shop. Must happen after both
+        // shopTransactionService and minionManager are fully constructed.
+        shopTransactionService.enableMinionSupport(this, minionManager);
     }
 
     private void initializeGuiFramework() {
@@ -373,18 +366,10 @@ public final class EcoCorePlugin extends JavaPlugin {
         this.guiIconResolver = new GuiIconResolver();
     }
 
-    /**
-     * Loads the entire shop catalog (categories + items) from
-     * {@code modules/shop-items.yml} via {@link ShopCatalogLoader}.
-     */
     private void loadShopCatalogFromConfig() {
         new ShopCatalogLoader(getLogger()).loadInto(shopManager, configManager.getShopItemsConfig());
     }
 
-    /**
-     * Registers a small starter quest catalog (one per rotation type) so
-     * the Quest module has something to hand out immediately after install.
-     */
     private void registerDefaultQuestCatalog() {
         questRegistry.register(new QuestDefinition(
             "daily_mine_stone", QuestType.DAILY, "Penambang Harian",
@@ -435,11 +420,15 @@ public final class EcoCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new JobActionListener(
             jobProgressService, autoSellManager, messageService, questManager, numberFormatter
         ), this);
+        // --- Register MinionItemListener ---
+        // Handles right-click interactions with Minion Spawn Items purchased
+        // from the Dynamic Shop, placing the minion in-world and consuming
+        // the item from the player's hand.
+        pluginManager.registerEvents(new MinionItemListener(this, minionManager, messageService), this);
     }
 
     private void registerCommands() {
         EcoCommand ecoCommand = new EcoCommand(messageService);
-
         ecoCommand.register(new ReloadSubCommand(configManager, this::reloadAllModules, messageService));
         ecoCommand.register(new GiveSubCommand(economyService, messageService));
         ecoCommand.register(new DebugSubCommand(debugLogger));
@@ -449,7 +438,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         ecoCommand.register(new QuestSubCommand(questManager));
         ecoCommand.register(new ShopSubCommand(shopManager, shopItemRepository, guiSessionManager, configManager.getGuiConfig(), numberFormatter));
         ecoCommand.register(new EconomySubCommand(economyStatisticsService, currencyManager, numberFormatter));
-
         ecoCommand.register(new JobsOpenSubCommand(
             jobManager, prestigeManager, jobRewardCalculator, configManager.getGuiConfig(),
             guiIconResolver, guiSessionManager, messageService
@@ -469,7 +457,6 @@ public final class EcoCorePlugin extends JavaPlugin {
             shopManager, shopTransactionService, configManager.getGuiConfig(), guiIconResolver,
             messageService, guiSessionManager, numberFormatter
         ));
-
         var command = getCommand("ecocore");
         if (command != null) {
             command.setExecutor(ecoCommand);
@@ -483,7 +470,6 @@ public final class EcoCorePlugin extends JavaPlugin {
                 .register();
             logger.info("PlaceholderAPI expansion registered.");
         }
-
         this.luckPermsIntegration = new LuckPermsIntegration(logger);
         luckPermsIntegration.tryInitialize();
     }
@@ -492,52 +478,35 @@ public final class EcoCorePlugin extends JavaPlugin {
         EcoCoreProvider.register(new EcoCoreApiImpl());
     }
 
-    /**
-     * Invoked by {@code /ecocore reload}. Reloads every config file, then
-     * pushes the fresh config objects into every component that holds one,
-     * then finally reloads every registered {@link Module}.
-     */
     private void reloadAllModules() {
         configManager.reloadAll();
         debugLogger.setEnabled(configManager.isDebugMode());
         messageService.reload(configManager.getMessagesConfig().asFlatMap());
-
         currencyManager.reload(configManager.getEconomyConfig());
         taxManager.reload(configManager.getEconomyConfig());
         moneySinkManager.reload(configManager.getEconomyConfig());
-
         shopManager.updateShopConfig(configManager.getShopConfig());
         marketTickTask.updateMarketConfig(configManager.getMarketConfig());
         serverNewsBroadcaster.reload(configManager.getMarketConfig());
-
         inflationCalculator.reload(configManager.getInflationConfig());
         inflationAdjustmentService.reload(configManager.getInflationConfig());
         inflationModule.updateInflationConfig(configManager.getInflationConfig());
-
         sellFilterManager.load(configManager.getSellConfig());
         sellMultiplierResolver.load(configManager.getSellConfig());
-
         comboTracker.reload(configManager.getJobsConfig());
         jobRewardCalculator.reload(configManager.getJobsConfig());
         prestigeManager.reload(configManager.getJobsConfig());
         jobProgressService.reload(configManager.getJobsConfig());
         jobManager.updateJobsConfig(configManager.getJobsConfig());
-
         questGenerator.reload(configManager.getQuestConfig());
         questManager.updateQuestConfig(configManager.getQuestConfig());
-
         minionLimitPolicy.reload(configManager.getMinionsConfig());
         minionStorageManager.reload(configManager.getMinionsConfig());
         minionManager.updateMinionsConfig(configManager.getMinionsConfig());
-
         moduleManager.reloadAll();
     }
 
-    /**
-     * Lightweight {@link Module} wrapper for the Inflation system.
-     */
     private static final class InflationModule implements Module {
-
         private final InflationAdjustmentService adjustmentService;
         private final CurrencyManager currencyManager;
         private com.azthera.ecocore.config.InflationConfig inflationConfig;
@@ -545,7 +514,6 @@ public final class EcoCorePlugin extends JavaPlugin {
         private final Logger logger;
         private EcoScheduledTask scheduledTask;
         private boolean enabled;
-
         private InflationModule(InflationAdjustmentService adjustmentService, CurrencyManager currencyManager,
                                  com.azthera.ecocore.config.InflationConfig inflationConfig,
                                  SchedulerAdapter schedulerAdapter, Logger logger) {
@@ -555,12 +523,10 @@ public final class EcoCorePlugin extends JavaPlugin {
             this.schedulerAdapter = schedulerAdapter;
             this.logger = logger;
         }
-
         @Override
         public String getName() {
             return "inflation";
         }
-
         @Override
         public void enable() {
             this.enabled = true;
@@ -571,7 +537,6 @@ public final class EcoCorePlugin extends JavaPlugin {
             }, intervalTicks, intervalTicks);
             logger.info(() -> "Inflation cycle scheduled every " + inflationConfig.getCalculationIntervalSeconds() + " seconds.");
         }
-
         @Override
         public void disable() {
             this.enabled = false;
@@ -579,57 +544,44 @@ public final class EcoCorePlugin extends JavaPlugin {
                 scheduledTask.cancel();
             }
         }
-
         @Override
         public void reload() {
             disable();
             enable();
         }
-
         @Override
         public boolean isEnabled() {
             return enabled;
         }
-
         private void updateInflationConfig(com.azthera.ecocore.config.InflationConfig inflationConfig) {
             this.inflationConfig = inflationConfig;
         }
     }
 
-    /**
-     * Concrete {@link EcoCoreAPI} implementation exposing only the
-     * manager/service types intended for third-party consumption.
-     */
     private final class EcoCoreApiImpl implements EcoCoreAPI {
-
         @Override
         public EconomyService getEconomyService() {
             return economyService;
         }
-
         @Override
         public ShopManager getShopManager() {
             return shopManager;
         }
-
         @Override
         public JobManager getJobManager() {
             return jobManager;
         }
-
         @Override
         public QuestManager getQuestManager() {
             return questManager;
         }
-
         @Override
         public MinionManager getMinionManager() {
             return minionManager;
         }
-
         @Override
         public String getVersion() {
             return getPluginMeta().getVersion();
         }
     }
- }
+}
