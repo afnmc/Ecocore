@@ -18,12 +18,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.conversations.Conversable;
-import org.bukkit.conversations.ConversationAbandonedEvent;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.ConversationFactory;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
+import org.bukkit.conversations.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +26,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The Dynamic Shop main menu with CATEGORY-FIRST flow.
+ * 1. If categoryId is null -> show category buttons.
+ * 2. If categoryId is not null -> show items in that category.
+ * 
+ * Each item displays both buy price (gold) and sell price (green).
+ * Left-click to buy, right-click does nothing (sell is in SellGui).
+ */
 public final class ShopGui extends PaginatedGui {
     private final ShopManager shopManager;
     private final ShopTransactionService shopTransactionService;
@@ -89,14 +92,9 @@ public final class ShopGui extends PaginatedGui {
         ItemStack filler = iconResolver.resolveIcon(guiConfig, "border-filler");
         fillBorder(filler);
         
-        // Jika tidak ada kategori yang dipilih, tampilkan kategori di baris atas
+        // CATEGORY-FIRST: Jika tidak ada kategori, tampilkan kategori di row 0
         if (categoryId == null) {
             int col = 1;
-            setButton(col++, GuiButton.of(buildAllCategoriesIcon(), (player, clickType) -> {
-                searchFilter.clear();
-                new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
-                    getSessionManager(), numberFormatter, null).open(player);
-            }));
             for (ShopCategory category : shopManager.getAllCategories()) {
                 if (col > 7) break;
                 int slot = col++;
@@ -118,15 +116,9 @@ public final class ShopGui extends PaginatedGui {
 
     @Override
     protected List<GuiButton> getAllContentButtons() {
-        // CATEGORY-FIRST FLOW: Jika categoryId null, tampilkan kategori sebagai "content"
+        // Jika categoryId null, return empty (kategori sudah di renderStaticElements)
         if (categoryId == null) {
-            List<GuiButton> categoryButtons = new ArrayList<>();
-            for (ShopCategory category : shopManager.getAllCategories()) {
-                categoryButtons.add(GuiButton.of(buildCategoryIcon(category), (player, clickType) ->
-                    new ShopGui(shopManager, shopTransactionService, guiConfig, iconResolver, messageService,
-                        getSessionManager(), numberFormatter, category.getId()).open(player)));
-            }
-            return categoryButtons;
+            return List.of();
         }
 
         // Jika categoryId tidak null, tampilkan item di kategori tersebut
@@ -138,7 +130,9 @@ public final class ShopGui extends PaginatedGui {
         definitions.sort((a, b) -> {
             var recordA = shopManager.getRecord(a.getItemId());
             var recordB = shopManager.getRecord(b.getItemId());
-            if (recordA.isEmpty() || recordB.isEmpty()) return 0;
+            if (recordA.isEmpty() || recordB.isEmpty()) {
+                return 0;
+            }
             return sortOption.getComparator().compare(recordA.get(), recordB.get());
         });
 
@@ -161,9 +155,10 @@ public final class ShopGui extends PaginatedGui {
     }
 
     private void handleItemClick(Player player, ShopItemDefinition definition, ClickType clickType) {
-        // BUY-ONLY: Hanya kiri untuk beli. Jual dipindah ke SellGui.
-        if (!clickType.isLeftClick()) return;
-        
+        // BUY-ONLY: Hanya kiri untuk beli
+        if (!clickType.isLeftClick()) {
+            return;
+        }
         int quantity = clickType.isShiftClick() ? 10 : 1;
         Result<Double> result = shopTransactionService.buy(player.getUniqueId(), definition.getItemId(), quantity);
         if (result.isSuccess()) {
@@ -179,24 +174,22 @@ public final class ShopGui extends PaginatedGui {
 
     private ItemStack buildItemIcon(ShopItemDefinition definition) {
         Material material = Material.matchMaterial(definition.getMaterial());
-        if (material == null) material = Material.STONE;
-        
+        if (material == null) {
+            material = Material.STONE;
+        }
         var recordOpt = shopManager.getRecord(definition.getItemId());
         double buyPrice = recordOpt.map(r -> r.getCurrentPrice()).orElse(definition.getInitialBasePrice());
         double sellPrice = recordOpt.map(r -> r.getSellPrice()).orElse(definition.getInitialBasePrice() * 0.7);
         int stock = recordOpt.map(r -> r.getStock()).orElse(0);
-        
         ItemBuilder builder = ItemBuilder.of(material).name(Component.text(definition.getDisplayName(), NamedTextColor.YELLOW));
         if (definition.getCustomModelData() > 0) {
             builder.customModelData(definition.getCustomModelData());
         }
-        
-        // TAMPILKAN 2 HARGA
+        // Tampilkan 2 harga
         builder.lore(Component.text("Harga Beli: " + numberFormatter.format(buyPrice), NamedTextColor.GOLD));
         builder.lore(Component.text("Harga Jual: " + numberFormatter.format(sellPrice), NamedTextColor.GREEN));
         builder.lore(Component.text("Stok: " + stock, stock > 0 ? NamedTextColor.AQUA : NamedTextColor.RED));
         builder.lore(Component.empty());
-        
         if (definition.isBuyable()) {
             builder.lore(Component.text("Klik kiri: Beli 1", NamedTextColor.GRAY));
             builder.lore(Component.text("Shift-klik kiri: Beli 10", NamedTextColor.GRAY));
@@ -207,16 +200,11 @@ public final class ShopGui extends PaginatedGui {
         return builder.build();
     }
 
-    private ItemStack buildAllCategoriesIcon() {
-        return ItemBuilder.of(Material.NETHER_STAR)
-            .name(Component.text("Semua Kategori", NamedTextColor.AQUA))
-            .lore(Component.text("Klik untuk melihat semua kategori.", NamedTextColor.GRAY))
-            .build();
-    }
-
     private ItemStack buildCategoryIcon(ShopCategory category) {
         Material material = Material.matchMaterial(category.getIconMaterial());
-        if (material == null) material = Material.CHEST;
+        if (material == null) {
+            material = Material.CHEST;
+        }
         return ItemBuilder.of(material)
             .name(Component.text(category.getDisplayName(), NamedTextColor.AQUA))
             .lore(Component.text("Klik untuk melihat item.", NamedTextColor.GRAY))
@@ -266,4 +254,4 @@ public final class ShopGui extends PaginatedGui {
             });
         factory.buildConversation(player).begin();
     }
-}
+            }
