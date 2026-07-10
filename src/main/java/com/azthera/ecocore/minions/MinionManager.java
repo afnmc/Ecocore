@@ -5,9 +5,8 @@ import com.azthera.ecocore.config.MinionsConfig;
 import com.azthera.ecocore.data.model.MinionData;
 import com.azthera.ecocore.data.repository.MinionRepository;
 import com.azthera.ecocore.util.Result;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -101,6 +100,12 @@ public final class MinionManager implements Module {
         return Result.success(minionData);
     }
 
+    /**
+     * Spawns an invisible ArmorStand above the minion block to act as a visual label.
+     * 
+     * <p><b>Since V3.2:</b> Fixed type mismatch - setCustomName() requires String,
+     * not Component. Using ChatColor.GOLD for legacy color support.</p>
+     */
     private void spawnMinionEntity(MinionData data) {
         try {
             Location loc = new Location(
@@ -110,7 +115,8 @@ public final class MinionManager implements Module {
             if (loc.getWorld() == null) return;
 
             ArmorStand stand = loc.getWorld().spawn(loc.add(0.5, 0.8, 0.5), ArmorStand.class, entity -> {
-                entity.setCustomName(Component.text(data.getMinionType() + " Minion", NamedTextColor.GOLD));
+                // FIX: setCustomName() butuh String, bukan Component
+                entity.setCustomName(ChatColor.GOLD + data.getMinionType() + " Minion");
                 entity.setCustomNameVisible(true);
                 entity.setMarker(true);
                 entity.setInvulnerable(true);
