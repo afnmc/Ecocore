@@ -9,15 +9,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Base class for every custom inventory menu in EcoCore.
- * 
- * <p><b>Since V3.1:</b> The {@code inventory} field is now {@code protected}
- * (instead of {@code private}) so subclasses like {@code SellGui} that implement
- * cart-style drag/drop interfaces can directly manipulate inventory slots.</p>
- */
 public abstract class AbstractGui implements InventoryHolder {
-    // FIX: Changed from 'private' to 'protected' to allow SellGui cart access
+    // FIX: Diubah ke protected agar SellGui bisa akses langsung untuk fitur cart drag/drop
     protected final Inventory inventory;
     private final GuiSessionManager sessionManager;
     private final Map<Integer, GuiButton> buttons = new HashMap<>();
@@ -28,23 +21,16 @@ public abstract class AbstractGui implements InventoryHolder {
     }
 
     @Override
-    public Inventory getInventory() {
-        return inventory;
-    }
-
+    public Inventory getInventory() { return inventory; }
     public abstract void render();
-
-    public void onClose(Player player) {
-    }
+    public void onClose(Player player) { }
 
     protected void setButton(int slot, GuiButton button) {
         buttons.put(slot, button);
         inventory.setItem(slot, button.getIcon());
     }
 
-    protected void clearButtons() {
-        buttons.clear();
-    }
+    protected void clearButtons() { buttons.clear(); }
 
     protected void fillBorder(ItemStack fillerItem) {
         int size = inventory.getSize();
@@ -61,9 +47,7 @@ public abstract class AbstractGui implements InventoryHolder {
 
     public void handleClick(Player player, int slot, ClickType clickType) {
         GuiButton button = buttons.get(slot);
-        if (button != null) {
-            button.handleClick(player, clickType);
-        }
+        if (button != null) button.handleClick(player, clickType);
     }
 
     public void open(Player player) {
@@ -72,7 +56,5 @@ public abstract class AbstractGui implements InventoryHolder {
         sessionManager.registerOpenSession(player, this);
     }
 
-    protected GuiSessionManager getSessionManager() {
-        return sessionManager;
-    }
+    protected GuiSessionManager getSessionManager() { return sessionManager; }
 }
