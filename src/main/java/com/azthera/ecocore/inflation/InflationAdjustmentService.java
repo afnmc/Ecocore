@@ -17,10 +17,13 @@ public final class InflationAdjustmentService {
     private final InflationCalculator inflationCalculator;
     private final TaxManager taxManager;
     private final EconomyStatisticsService statisticsService;
-    private final SchedulerAdapter schedulerAdapter; // Tambahan
+    private final SchedulerAdapter schedulerAdapter;
     private final Logger logger;
     private InflationConfig inflationConfig;
     private double currentTaxRateModifier = 0.0;
+
+    private double lastEffectiveRate = 0.0;
+    private InflationCalculator.InflationState lastState = InflationCalculator.InflationState.STABLE;
 
     public InflationAdjustmentService(ShopItemRepository shopItemRepository, MoneySupplyTracker moneySupplyTracker,
                                        InflationCalculator inflationCalculator, TaxManager taxManager,
@@ -48,27 +51,28 @@ public final class InflationAdjustmentService {
                     .sum();
                 double effectiveRate = inflationCalculator.computeEffectiveInflationRate(snapshot, transactionVolume);
                 InflationCalculator.InflationState state = inflationCalculator.classify(effectiveRate);
+
+                this.lastEffectiveRate = effectiveRate;
+                this.lastState = state;
+
                 applyAdjustment(state);
-                
-                // Broadcast Notifikasi
                 broadcastInflationNotification(effectiveRate, state);
-                
+
                 logger.info(() -> "Inflation cycle: rate=" + String.format("%.4f", effectiveRate) + " state=" + state);
             });
         });
     }
 
     private void broadcastInflationNotification(double effectiveRate, InflationCalculator.InflationState state) {
-        if (Math.abs(effectiveRate) < 0.01) return; // Abaikan jika stabil
-        
+        if (Math.abs(effectiveRate) < 0.01) return;
+
         Component message;
         if (effectiveRate > 0) {
             message = Component.text("▴ Inflasi: Naik " + String.format("%.2f%%", effectiveRate * 100), NamedTextColor.RED);
         } else {
             message = Component.text("▾ Inflasi: Turun " + String.format("%.2f%%", Math.abs(effectiveRate) * 100), NamedTextColor.GREEN);
         }
-        
-        // Kirim ke semua player online
+
         schedulerAdapter.runSync(() -> Bukkit.getServer().sendMessage(message));
     }
 
@@ -103,7 +107,7 @@ public final class InflationAdjustmentService {
         currentTaxRateModifier = Math.max(-0.02, Math.min(0.02, currentTaxRateModifier + delta));
     }
 
-    public double getCurrentTaxRateModifier() {
-        return currentTaxRateModifier;
-    }
-            }
+    public double getCurrentTaxRateModifier() { return currentTaxRateModifier; }
+    public double getLastEffectiveRate() { return lastEffectiveRate; }
+    public InflationCalculator.InflationState getLastState() { return lastState; }
+}
