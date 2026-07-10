@@ -7,6 +7,7 @@ import com.azthera.ecocore.data.repository.MinionRepository;
 import com.azthera.ecocore.util.Result;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -26,8 +27,7 @@ public final class MinionManager implements Module {
     private MinionsConfig minionsConfig;
     private final Logger logger;
     private boolean enabled;
-    
-    // Map untuk melacak Entity ID berdasarkan Minion ID
+
     private final Map<UUID, UUID> minionEntityMap = new ConcurrentHashMap<>();
 
     public MinionManager(MinionRepository minionRepository, MinionLimitPolicy limitPolicy,
@@ -59,9 +59,8 @@ public final class MinionManager implements Module {
     public void disable() {
         this.enabled = false;
         taskScheduler.stop();
-        // Hapus semua entity visual saat disable
         for (UUID entityId : minionEntityMap.values()) {
-            Entity entity = org.bukkit.Bukkit.getEntity(entityId);
+            Entity entity = Bukkit.getEntity(entityId);
             if (entity != null) entity.remove();
         }
         minionEntityMap.clear();
@@ -69,52 +68,55 @@ public final class MinionManager implements Module {
 
     @Override
     public void reload() { disable(); enable(); }
+
     @Override
     public boolean isEnabled() { return enabled; }
 
     public void loadPlayerMinions(UUID playerId) {
         if (!enabled) return;
         minionRepository.loadForOwnerAsync(playerId).thenAccept(minions -> {
-            for (MinionData data : minions) {
-                spawnMinionEntity(data);
-            }
+            for (MinionData data : minions) spawnMinionEntity(data);
         });
     }
 
     public Result<MinionData> placeMinion(Player player, MinionType type, Location location) {
         if (!enabled) return Result.failure("Modul minion sedang tidak aktif.");
-        if (!limitPolicy.canPlaceAnother(player)) return Result.failure("Batas maksimum minion tercapai.");
-        
+        if (!limitPolicy.canPlaceAnother(player)) return Result.failure("Kamu sudah mencapai batas maksimum minion.");
+
         MinionsConfig.MinionTypeDefinition typeDefinition = minionsConfig.getMinionTypeDefinitions().get(type.name());
-        if (typeDefinition == null || !typeDefinition.enabled()) return Result.failure("Tipe minion tidak aktif.");
+        if (typeDefinition == null || !typeDefinition.enabled()) return Result.failure("Tipe minion ini tidak diaktifkan.");
 
         var emptyStorage = storageManager.createEmptyStorage(type);
         byte[] serializedEmpty = storageManager.serializeStorage(emptyStorage);
+
         MinionData minionData = new MinionData(
             UUID.randomUUID(), player.getUniqueId(), type.name(), location.getWorld().getName(),
             location.getX(), location.getY(), location.getZ(),
             0, 0, 0, minionsConfig.getBaseFuelCapacity(), serializedEmpty
         );
+
         minionRepository.insert(minionData);
-        
-        // Spawn Entity Visual
         spawnMinionEntity(minionData);
-        
+
         return Result.success(minionData);
     }
 
     private void spawnMinionEntity(MinionData data) {
         try {
-            Location loc = new Location(org.bukkit.Bukkit.getWorld(data.getWorldName()), data.getX(), data.getY(), data.getZ());
-            // Spawn ArmorStand sedikit di atas block
+            Location loc = new Location(
+                Bukkit.getWorld(data.getWorldName()),
+                data.getX(), data.getY(), data.getZ()
+            );
+            if (loc.getWorld() == null) return;
+
             ArmorStand stand = loc.getWorld().spawn(loc.add(0.5, 0.8, 0.5), ArmorStand.class, entity -> {
                 entity.setCustomName(Component.text(data.getMinionType() + " Minion", NamedTextColor.GOLD));
                 entity.setCustomNameVisible(true);
-                entity.setMarker(true); // Agar tidak bisa di-push
+                entity.setMarker(true);
                 entity.setInvulnerable(true);
                 entity.setGravity(false);
                 entity.setBasePlate(false);
-                entity.setVisible(false); // Invisible armor stand, hanya nama yang muncul
+                entity.setVisible(false);
                 entity.setSmall(true);
             });
             minionEntityMap.put(data.getMinionId(), stand.getUniqueId());
@@ -124,20 +126,22 @@ public final class MinionManager implements Module {
     }
 
     public Result<Void> removeMinion(Player player, UUID minionId) {
-        if (!enabled) return Result.failure("Modul minion tidak aktif.");
+        if (!enabled) return Result.failure("Modul minion sedang tidak aktif.");
+
         Optional<MinionData> dataOpt = minionRepository.getCached(minionId);
         if (dataOpt.isEmpty()) return Result.failure("Minion tidak ditemukan.");
-        if (!dataOpt.get().getOwnerId().equals(player.getUniqueId()) && !player.hasPermission("ecocore.minions.bypasslimit")) {
-            return Result.failure("Bukan pemilik minion.");
+
+        if (!dataOpt.get().getOwnerId().equals(player.getUniqueId())
+            && !player.hasPermission("ecocore.minions.bypasslimit")) {
+            return Result.failure("Kamu bukan pemilik minion ini.");
         }
-        
-        // Hapus Entity Visual
+
         UUID entityId = minionEntityMap.remove(minionId);
         if (entityId != null) {
-            Entity entity = org.bukkit.Bukkit.getEntity(entityId);
+            Entity entity = Bukkit.getEntity(entityId);
             if (entity != null) entity.remove();
         }
-        
+
         minionRepository.delete(minionId);
         return Result.success(null);
     }
@@ -145,10 +149,12 @@ public final class MinionManager implements Module {
     public List<MinionData> getOwnedMinions(UUID ownerId) {
         return minionRepository.getAllCachedForOwner(ownerId);
     }
+
     public MinionLimitPolicy getLimitPolicy() { return limitPolicy; }
+
     public void updateMinionsConfig(MinionsConfig minionsConfig) {
         this.minionsConfig = minionsConfig;
         limitPolicy.reload(minionsConfig);
         storageManager.reload(minionsConfig);
     }
-         }
+}
