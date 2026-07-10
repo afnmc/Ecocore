@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public final class MinionTaskScheduler {
     private static final long TICK_INTERVAL_TICKS = 20L;
     private static final int FUEL_COST_PER_ACTION = 1;
-    
+
     private final MinionRepository minionRepository;
     private final MinionFuelManager fuelManager;
     private final MinionUpgradeService upgradeService;
@@ -52,9 +52,7 @@ public final class MinionTaskScheduler {
     }
 
     public void stop() {
-        if (tickTask != null && !tickTask.isCancelled()) {
-            tickTask.cancel();
-        }
+        if (tickTask != null && !tickTask.isCancelled()) tickTask.cancel();
         lastActionMillis.clear();
     }
 
@@ -115,17 +113,23 @@ public final class MinionTaskScheduler {
         };
     }
 
-    // --- MINER: Dengan Partikel Block Break ---
+    // MINER: Directional 3x3 + Particles Block Break
     private boolean performMinerAction(MinionInstance instance, World world, Location center) {
         for (int dx = -2; dx <= 2; dx++) {
             for (int dy = -2; dy <= 2; dy++) {
                 for (int dz = -2; dz <= 2; dz++) {
-                    Block block = world.getBlockAt(center.getBlockX() + dx, center.getBlockY() + dy, center.getBlockZ() + dz);
+                    Block block = world.getBlockAt(
+                        center.getBlockX() + dx,
+                        center.getBlockY() + dy,
+                        center.getBlockZ() + dz
+                    );
                     if (isOreOrStone(block.getType()) && instance.hasFreeStorageSlot()) {
-                        // Spawn Partikel Jelas (Block Crumble)
-                        world.spawnParticle(Particle.BLOCK_CRUMBLE, block.getLocation().add(0.5, 0.5, 0.5), 
-                            15, 0.2, 0.2, 0.2, 0.05, block.getBlockData());
-                        
+                        world.spawnParticle(
+                            Particle.BLOCK_CRUMBLE,
+                            block.getLocation().add(0.5, 0.5, 0.5),
+                            15, 0.2, 0.2, 0.2, 0.05, block.getBlockData()
+                        );
+
                         ItemStack drop = new ItemStack(block.getType());
                         block.setType(Material.AIR);
                         instance.tryAddItem(drop);
@@ -137,27 +141,29 @@ public final class MinionTaskScheduler {
         return false;
     }
 
-    // --- FARMER: Dengan Auto-Replant ---
+    // FARMER: Auto-Replant (tanam kembali seed setelah panen)
     private boolean performFarmerAction(MinionInstance instance, World world, Location center) {
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
-                Block block = world.getBlockAt(center.getBlockX() + dx, center.getBlockY(), center.getBlockZ() + dz);
-                if (isMatureCrop(block) && instance.hasFreeStorageSlot()) {
+                Block block = world.getBlockAt(
+                    center.getBlockX() + dx,
+                    center.getBlockY(),
+                    center.getBlockZ() + dz
+                );
+                if (block.getBlockData() instanceof Ageable ageable
+                    && ageable.getAge() == ageable.getMaximumAge()) {
                     Material cropType = block.getType();
                     ItemStack drop = new ItemStack(cropType);
-                    
-                    // 1. Harvest
+
                     block.setType(Material.AIR);
                     instance.tryAddItem(drop);
-                    
-                    // 2. Auto-Replant
+
                     Material seed = getSeedMaterial(cropType);
                     if (seed != null) {
                         ItemStack seedStack = new ItemStack(seed, 1);
-                        // Cek apakah ada seed di storage minion
                         if (instance.getStorageInventory().containsAtLeast(seedStack, 1)) {
                             instance.getStorageInventory().removeItem(seedStack);
-                            block.setType(seed); // Tanam kembali
+                            block.setType(seed);
                         }
                     }
                     return true;
@@ -167,12 +173,14 @@ public final class MinionTaskScheduler {
         return false;
     }
 
-    // --- COLLECTOR: Dengan Validasi Chest ---
+    // COLLECTOR: Wajib ada Chest di samping
     private boolean performCollectorAction(MinionInstance instance, World world, Location center) {
-        // Wajib ada Chest di samping
         if (!hasChestNearby(center)) return false;
 
-        var nearbyItems = world.getNearbyEntities(center, 4, 4, 4, entity -> entity instanceof org.bukkit.entity.Item);
+        var nearbyItems = world.getNearbyEntities(
+            center, 4, 4, 4,
+            entity -> entity instanceof org.bukkit.entity.Item
+        );
         for (var entity : nearbyItems) {
             org.bukkit.entity.Item itemEntity = (org.bukkit.entity.Item) entity;
             if (instance.hasFreeStorageSlot()) {
@@ -188,9 +196,17 @@ public final class MinionTaskScheduler {
         for (int dx = -3; dx <= 3; dx++) {
             for (int dy = -1; dy <= 4; dy++) {
                 for (int dz = -3; dz <= 3; dz++) {
-                    Block block = world.getBlockAt(center.getBlockX() + dx, center.getBlockY() + dy, center.getBlockZ() + dz);
+                    Block block = world.getBlockAt(
+                        center.getBlockX() + dx,
+                        center.getBlockY() + dy,
+                        center.getBlockZ() + dz
+                    );
                     if (block.getType().name().contains("LOG") && instance.hasFreeStorageSlot()) {
-                        world.spawnParticle(Particle.BLOCK_CRUMBLE, block.getLocation().add(0.5, 0.5, 0.5), 10, 0.2, 0.2, 0.2, 0.05, block.getBlockData());
+                        world.spawnParticle(
+                            Particle.BLOCK_CRUMBLE,
+                            block.getLocation().add(0.5, 0.5, 0.5),
+                            10, 0.2, 0.2, 0.2, 0.05, block.getBlockData()
+                        );
                         ItemStack drop = new ItemStack(block.getType());
                         block.setType(Material.AIR);
                         instance.tryAddItem(drop);
@@ -211,7 +227,6 @@ public final class MinionTaskScheduler {
         return true;
     }
 
-    // --- Helpers ---
     private boolean hasChestNearby(Location location) {
         Block centerBlock = location.getBlock();
         for (BlockFace face : new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST}) {
@@ -238,9 +253,4 @@ public final class MinionTaskScheduler {
         String name = material.name();
         return name.contains("ORE") || name.contains("STONE") || name.contains("DEEPSLATE");
     }
-
-    private boolean isMatureCrop(Block block) {
-        if (!(block.getBlockData() instanceof Ageable ageable)) return false;
-        return ageable.getAge() >= ageable.getMaximumAge();
-    }
-                               }
+}
