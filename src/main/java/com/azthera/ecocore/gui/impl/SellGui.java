@@ -15,17 +15,10 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Cart-style Sell GUI: players drag items from their inventory into a
- * 27-slot storage area (3 rows), then click "Sell All" to sell everything.
- * If the player closes the GUI without selling, items are returned.
- */
 public final class SellGui extends AbstractGui {
-    // Area keranjang (Row 1-3)
     private static final int[] CART_SLOTS = {
         10, 11, 12, 13, 14, 15, 16,
         19, 20, 21, 22, 23, 24, 25,
@@ -62,21 +55,13 @@ public final class SellGui extends AbstractGui {
         ItemStack filler = iconResolver.resolveIcon(guiConfig, "border-filler");
         fillBorder(filler);
 
-        // Header row (row 0)
         for (int i = 0; i < 9; i++) {
-            if (inventory.getItem(i) == null) {
-                inventory.setItem(i, filler);
-            }
+            if (inventory.getItem(i) == null) inventory.setItem(i, filler);
         }
-
-        // Cart area (rows 1-3) — Kosongkan agar player bisa drag item
         for (int slot : CART_SLOTS) {
-            if (inventory.getItem(slot) == null) {
-                inventory.setItem(slot, null);
-            }
+            if (inventory.getItem(slot) == null) inventory.setItem(slot, null);
         }
 
-        // Action bar (row 4)
         setButton(SELL_ALL_SLOT, GuiButton.of(
             ItemBuilder.of(Material.EMERALD_BLOCK)
                 .name(Component.text("Jual Semua di Keranjang", NamedTextColor.GREEN))
@@ -97,8 +82,6 @@ public final class SellGui extends AbstractGui {
                 .build(),
             (player, clickType) -> player.closeInventory()
         ));
-
-        // Info slot
         setButton(INFO_SLOT, GuiButton.display(
             ItemBuilder.of(Material.BOOK)
                 .name(Component.text("Info Keranjang", NamedTextColor.GOLD))
@@ -108,11 +91,8 @@ public final class SellGui extends AbstractGui {
                 .build()
         ));
 
-        // Footer row (row 5)
         for (int i = 45; i < 54; i++) {
-            if (inventory.getItem(i) == null) {
-                inventory.setItem(i, filler);
-            }
+            if (inventory.getItem(i) == null) inventory.setItem(i, filler);
         }
     }
 
@@ -124,9 +104,8 @@ public final class SellGui extends AbstractGui {
         }
         Result<Double> result = sellService.sellCartItems(player, cartItems);
         if (result.isSuccess()) {
-            double payout = result.orElse(0.0);
             player.sendMessage(messageService.render("sell.cart-sell-success",
-                MessageService.placeholder("price", numberFormatter.format(payout))));
+                MessageService.placeholder("price", numberFormatter.format(result.orElse(0.0)))));
             clearCart();
             render();
         } else {
@@ -142,7 +121,7 @@ public final class SellGui extends AbstractGui {
         }
         returnItemsToPlayer(player, cartItems);
         clearCart();
-        player.sendMessage(Component.text("Item dikembalikan ke inventory.", NamedTextColor.GREEN));
+        player.sendMessage(Component.text("Item dikembalikan.", NamedTextColor.GREEN));
         render();
     }
 
@@ -150,17 +129,13 @@ public final class SellGui extends AbstractGui {
         List<ItemStack> items = new ArrayList<>();
         for (int slot : CART_SLOTS) {
             ItemStack item = inventory.getItem(slot);
-            if (item != null && !item.getType().isAir()) {
-                items.add(item.clone());
-            }
+            if (item != null && !item.getType().isAir()) items.add(item.clone());
         }
         return items;
     }
 
     private void clearCart() {
-        for (int slot : CART_SLOTS) {
-            inventory.setItem(slot, null);
-        }
+        for (int slot : CART_SLOTS) inventory.setItem(slot, null);
     }
 
     private void returnItemsToPlayer(Player player, List<ItemStack> items) {
@@ -177,17 +152,12 @@ public final class SellGui extends AbstractGui {
         List<ItemStack> remainingItems = collectCartItems();
         if (!remainingItems.isEmpty()) {
             returnItemsToPlayer(player, remainingItems);
-            player.sendMessage(Component.text("Item yang tidak dijual dikembalikan ke inventory.", NamedTextColor.YELLOW));
+            player.sendMessage(Component.text("Item dikembalikan.", NamedTextColor.YELLOW));
         }
     }
 
-    /**
-     * Helper for InventoryClickListener to check if a slot is part of the cart.
-     */
     public static boolean isCartSlot(int slot) {
-        for (int s : CART_SLOTS) {
-            if (s == slot) return true;
-        }
+        for (int s : CART_SLOTS) if (s == slot) return true;
         return false;
     }
-                  }
+}
